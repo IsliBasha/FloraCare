@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FloraCare</string>
+    <string name="widget_today_tasks_label">Today\'s plant care</string>
+</resources>
