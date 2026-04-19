@@ -148,10 +148,10 @@ class ComputeNextCareTaskUseCaseTest {
 
         assertEquals(now + 16.days, result.scheduledAt)
 
-        // Sanity: clamp upper bound is waterFrequencyDays * 2
+        // Sanity: with base=1, raw = round(1*1.5)+1 = 3, clamped to base*2 = 2.
         val extreme = useCase(
             plant = plant(location = LocationTag.OUTDOOR),
-            species = species(waterFrequencyDays = 4),
+            species = species(waterFrequencyDays = 1),
             recentLogs = listOf(
                 log(daysAgo = 1, moisture = SoilMoistureNote.DAMP),
                 log(daysAgo = 2, moisture = SoilMoistureNote.DAMP),
@@ -164,8 +164,8 @@ class ComputeNextCareTaskUseCaseTest {
             now = now,
         )
         assertTrue(
-            "expected clamped to base*2 (${4 * 2}), got ${extreme.scheduledAt - now}",
-            extreme.scheduledAt == now + (4 * 2).days,
+            "expected clamped to base*2 (${1 * 2}), got ${extreme.scheduledAt - now}",
+            extreme.scheduledAt == now + (1 * 2).days,
         )
     }
 }
