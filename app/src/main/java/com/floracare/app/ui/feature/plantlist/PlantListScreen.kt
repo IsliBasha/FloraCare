@@ -33,11 +33,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.floracare.app.ui.theme.LocalFloraAccents
 import com.floracare.app.ui.theme.LocalFloraSpacing
 
@@ -49,12 +52,6 @@ data class PlantCardUi(
     val accent: Color,
 )
 
-private val mockPlants = listOf(
-    PlantCardUi("pl-mona", "Mona", "Monstera deliciosa", "Water in 2 days", Color(0xFF8BA888)),
-    PlantCardUi("pl-finn", "Finn", "Ficus lyrata", "Water tomorrow", Color(0xFFC66B3D)),
-    PlantCardUi("pl-sage", "Sage", "Sansevieria trifasciata", "Water in 6 days", Color(0xFF6E8F74)),
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantListScreen(
@@ -62,8 +59,16 @@ fun PlantListScreen(
     onAddClick: () -> Unit,
     onDashboardClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    viewModel: PlantListViewModel = hiltViewModel(),
 ) {
     val spacing = LocalFloraSpacing.current
+    val state by viewModel.state.collectAsState()
+    val plants: List<PlantCardUi> = (state as? PlantListUiState.Success)?.plants.orEmpty()
+    val headerSubtitle = when (val s = state) {
+        PlantListUiState.Loading -> "Loading your garden…"
+        is PlantListUiState.Success -> "${s.plants.size} plants · tap a card to open"
+        is PlantListUiState.Error -> "Error: ${s.message}"
+    }
 
     Scaffold(
         topBar = {
@@ -76,7 +81,7 @@ fun PlantListScreen(
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
-                            "${mockPlants.size} plants · 2 need water today",
+                            headerSubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -118,7 +123,7 @@ fun PlantListScreen(
             verticalArrangement = Arrangement.spacedBy(spacing.md),
             modifier = Modifier.fillMaxSize(),
         ) {
-            items(mockPlants, key = { it.id }) { plant ->
+            items(plants, key = { it.id }) { plant ->
                 PlantCard(plant = plant, onClick = { onPlantClick(plant.id) })
             }
         }

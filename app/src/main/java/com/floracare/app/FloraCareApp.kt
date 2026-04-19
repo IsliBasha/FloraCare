@@ -5,13 +5,23 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.floracare.app.data.local.DatabaseSeeder
+import com.floracare.app.data.local.FloraCareDatabase
+import com.floracare.app.data.worker.CareScheduleBootstrapper
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
 class FloraCareApp : Application(), Configuration.Provider {
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var database: FloraCareDatabase
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -21,6 +31,10 @@ class FloraCareApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         createCareChannels()
+        CareScheduleBootstrapper.enqueue(this)
+        appScope.launch {
+            DatabaseSeeder(database).seedIfEmpty()
+        }
     }
 
     private fun createCareChannels() {
