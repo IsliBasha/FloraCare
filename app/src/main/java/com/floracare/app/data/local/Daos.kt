@@ -30,11 +30,17 @@ interface SpeciesDao {
     @Query("SELECT * FROM species WHERE id = :id LIMIT 1")
     suspend fun findById(id: String): SpeciesEntity?
 
+    @Query("SELECT * FROM species WHERE lower(trim(scientificName)) = lower(trim(:scientificName)) LIMIT 1")
+    suspend fun findByScientificName(scientificName: String): SpeciesEntity?
+
     @Query("SELECT * FROM species ORDER BY commonName ASC")
     fun observeAll(): Flow<List<SpeciesEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(species: List<SpeciesEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(species: SpeciesEntity)
 
     @Query("SELECT COUNT(*) FROM species")
     suspend fun count(): Int
@@ -44,6 +50,9 @@ interface SpeciesDao {
 interface CareTaskDao {
     @Query("SELECT * FROM care_task WHERE plantId = :plantId AND completedAt IS NULL ORDER BY scheduledAt ASC")
     fun observeOpenForPlant(plantId: String): Flow<List<CareTaskEntity>>
+
+    @Query("SELECT * FROM care_task WHERE completedAt IS NULL ORDER BY scheduledAt ASC")
+    fun observeAllOpen(): Flow<List<CareTaskEntity>>
 
     @Query("SELECT * FROM care_task WHERE completedAt IS NULL AND scheduledAt <= :until ORDER BY scheduledAt ASC")
     suspend fun findDueBefore(until: Instant): List<CareTaskEntity>

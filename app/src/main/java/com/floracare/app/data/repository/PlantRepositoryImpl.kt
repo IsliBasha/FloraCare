@@ -38,8 +38,19 @@ class PlantRepositoryImpl @Inject constructor(
 
     override suspend fun findSpecies(id: String): Species? = speciesDao.findById(id)?.toDomain()
 
+    override suspend fun findSpeciesByScientificName(scientificName: String): Species? =
+        speciesDao.findByScientificName(scientificName)?.toDomain()
+
+    override suspend fun upsertSpecies(species: Species) = speciesDao.upsert(species.toEntity())
+
+    override fun observeAllSpecies(): Flow<List<Species>> =
+        speciesDao.observeAll().map { list -> list.map { it.toDomain() } }
+
     override fun observeOpenTasks(plantId: String): Flow<List<CareTask>> =
         taskDao.observeOpenForPlant(plantId).map { list -> list.map { it.toDomain() } }
+
+    override fun observeAllOpenTasks(): Flow<List<CareTask>> =
+        taskDao.observeAllOpen().map { list -> list.map { it.toDomain() } }
 
     override suspend fun logCare(entry: CareLog) = logDao.insert(entry.toEntity())
 

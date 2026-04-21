@@ -8,21 +8,24 @@ import androidx.core.content.getSystemService
 
 /**
  * Handles notification action buttons (Mark done, Snooze 2 days) without opening the app.
- * Persisting the action to the database is wired up via Hilt in [data/repository/CareRepository].
- * This receiver stays lightweight; the heavy DB work is enqueued to WorkManager.
+ * Dismisses the notification for tactile feedback, then enqueues a [CareActionWorker]
+ * so the DB write survives receiver teardown.
  */
 class NotificationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val taskId = intent.getStringExtra(EXTRA_TASK_ID) ?: return
         val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
 
-        // Dismiss the notification immediately to give tactile feedback.
         if (notificationId != -1) {
             context.getSystemService<NotificationManager>()?.cancel(notificationId)
         }
 
-        // TODO(person-a): enqueue a OneTimeWorkRequest for CareActionWorker
-        //                 that persists MARK_DONE or SNOOZE depending on intent.action.
+        val workerAction = when (intent.action) {
+            ACTION_MARK_DONE -> CareActionWorker.ACTION_MARK_DONE
+            ACTION_SNOOZE_2D -> CareActionWorker.ACTION_SNOOZE_2D
+            else -> return
+        }
+        CareActionWorker.enqueue(context, taskId = taskId, action = workerAction)
     }
 
     companion object {

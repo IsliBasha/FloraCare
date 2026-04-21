@@ -35,7 +35,32 @@
 
         <receiver
             android:name=".data.worker.NotificationActionReceiver"
-            android:exported="false" />
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.floracare.app.ACTION_MARK_DONE" />
+                <action android:name="com.floracare.app.ACTION_SNOOZE_2D" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".data.worker.DebugTriggerReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="com.floracare.app.ACTION_DEBUG_RUN_SCHEDULER" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".data.worker.BootReceiver"
+            android:exported="true"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".widget.TodayTasksWidgetReceiver"

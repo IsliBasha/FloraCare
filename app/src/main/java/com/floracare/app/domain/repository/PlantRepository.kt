@@ -14,8 +14,12 @@ interface PlantRepository {
     suspend fun upsert(plant: Plant)
 
     suspend fun findSpecies(id: String): Species?
+    suspend fun findSpeciesByScientificName(scientificName: String): Species?
+    suspend fun upsertSpecies(species: Species)
+    fun observeAllSpecies(): Flow<List<Species>>
 
     fun observeOpenTasks(plantId: String): Flow<List<CareTask>>
+    fun observeAllOpenTasks(): Flow<List<CareTask>>
     suspend fun logCare(entry: CareLog)
     suspend fun recentLogs(plantId: String, since: Instant): List<CareLog>
     suspend fun upsertTask(task: CareTask)

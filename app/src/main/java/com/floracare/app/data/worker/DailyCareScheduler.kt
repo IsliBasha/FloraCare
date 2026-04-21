@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.floracare.app.data.notification.NotificationDispatcher
+import com.floracare.app.domain.model.Species
 import com.floracare.app.domain.repository.PlantRepository
 import com.floracare.app.domain.repository.WeatherRepository
 import com.floracare.app.domain.usecase.ComputeNextCareTaskUseCase
@@ -14,11 +16,17 @@ import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.days
 
 /**
- * Runs at 07:00 local (scheduled by the app), uses the adaptive care engine to
- * compute today's top tasks, and enqueues notifications through the system channel.
+ * Runs at 07:00 local (scheduled by [CareScheduleBootstrapper]):
+ *  1. Recomputes each plant's next adaptive care task and upserts it.
+ *  2. Posts a notification for every task that's due within the next 24 h.
  *
- * Notification building is delegated to [NotificationDispatcher] in a follow-up ticket;
- * this worker keeps the scheduling contract intact so the scaffold compiles today.
+ * Notification building is delegated to [NotificationDispatcher] so this worker
+ * stays focused on the scheduling + posting orchestration.
+ *
+ * The worker also accepts a `force_all` boolean in its input data — when true,
+ * it posts notifications for every plant's computed next task regardless of the
+ * 24 h due window. Intended for the [DebugTriggerReceiver] demo path and never
+ * set by the periodic enqueue.
  */
 @HiltWorker
 class DailyCareScheduler @AssistedInject constructor(
@@ -27,15 +35,23 @@ class DailyCareScheduler @AssistedInject constructor(
     private val plants: PlantRepository,
     private val weather: WeatherRepository,
     private val computeNextTask: ComputeNextCareTaskUseCase,
+    private val notifications: NotificationDispatcher,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         val now = Clock.System.now()
         val since = now - 14.days
         val recentWeather = weather.recentWeather(since = now - 7.days)
+        val forceAll = inputData.getBoolean(KEY_FORCE_ALL, false)
 
-        plants.observePlants().first().forEach { plant ->
-            val species = plant.speciesId?.let { plants.findSpecies(it) } ?: return@forEach
+        val livePlants = plants.observePlants().first()
+        val speciesCache = mutableMapOf<String, Species?>()
+
+        livePlants.forEach { plant ->
+            val speciesId = plant.speciesId ?: return@forEach
+            val species = speciesCache.getOrPut(speciesId) { plants.findSpecies(speciesId) }
+                ?: return@forEach
+
             val logs = plants.recentLogs(plant.id, since)
             val task = computeNextTask(
                 plant = plant,
@@ -45,7 +61,19 @@ class DailyCareScheduler @AssistedInject constructor(
                 now = now,
             )
             plants.upsertTask(task)
+
+            val snoozed = task.snoozedUntil?.let { it > now } == true
+            val dueWithin24h = task.completedAt == null &&
+                !snoozed &&
+                task.scheduledAt <= now + 1.days
+            if (forceAll || dueWithin24h) {
+                notifications.post(task = task, plant = plant, species = species)
+            }
         }
         return Result.success()
+    }
+
+    companion object {
+        const val KEY_FORCE_ALL = "force_all"
     }
 }

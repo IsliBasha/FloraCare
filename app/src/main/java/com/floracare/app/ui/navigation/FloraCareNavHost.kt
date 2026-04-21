@@ -1,6 +1,7 @@
 package com.floracare.app.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -16,8 +17,19 @@ import com.floracare.app.ui.feature.plantlist.PlantListScreen
 import com.floracare.app.ui.feature.settings.SettingsScreen
 
 @Composable
-fun FloraCareNavHost() {
+fun FloraCareNavHost(
+    deepLinkPlantId: String? = null,
+    deepLinkKey: Int? = null,
+    onDeepLinkConsumed: () -> Unit = {},
+) {
     val navController = rememberNavController()
+
+    LaunchedEffect(deepLinkKey, deepLinkPlantId) {
+        if (deepLinkPlantId != null && deepLinkKey != null) {
+            navController.navigate(FloraRoute.PlantDetail(deepLinkPlantId))
+            onDeepLinkConsumed()
+        }
+    }
 
     NavHost(navController = navController, startDestination = FloraRoute.PlantList) {
         composable<FloraRoute.Onboarding> {
