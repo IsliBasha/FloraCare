@@ -62,4 +62,27 @@ class TopKParserTest {
         assertEquals(2, result.size)
         assertTrue(result.all { it.label == "A" || it.label == "B" })
     }
+
+    @Test
+    fun `background class is filtered from results`() {
+        val labelsWithBg = listOf("Monstera", "Pothos", "background", "Fiddle-leaf")
+        val logits = floatArrayOf(0.1f, 0.2f, 0.6f, 0.1f) // background would win
+
+        val top3 = parseTopK(logits, labelsWithBg, k = 3)
+
+        assertEquals(3, top3.size)
+        assertTrue("background must not appear", top3.none { it.label == "background" })
+        assertEquals("Pothos", top3[0].label)
+    }
+
+    @Test
+    fun `blank filler labels are skipped so k is honoured`() {
+        val labelsWithGap = listOf("Monstera", "", "Pothos", "Fiddle-leaf")
+        val logits = floatArrayOf(0.1f, 0.5f, 0.2f, 0.1f)
+
+        val top2 = parseTopK(logits, labelsWithGap, k = 2)
+
+        assertEquals(2, top2.size)
+        assertTrue(top2.none { it.label.isBlank() })
+    }
 }
