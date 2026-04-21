@@ -13,15 +13,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -33,11 +31,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.floracare.app.domain.model.CareTaskType
+import com.floracare.app.domain.model.Plant
+import com.floracare.app.domain.model.Species
 import com.floracare.app.ui.theme.LocalFloraAccents
 import com.floracare.app.ui.theme.LocalFloraSpacing
 
@@ -48,17 +52,19 @@ fun PlantDetailScreen(
     onBack: () -> Unit,
     onDiagnose: () -> Unit,
     onJournal: () -> Unit,
+    viewModel: PlantDetailViewModel = hiltViewModel(),
 ) {
-    val spacing = LocalFloraSpacing.current
-    val accents = LocalFloraAccents.current
-
+    val state by viewModel.state.collectAsState()
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {},
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = "Back",
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -66,62 +72,90 @@ fun PlantDetailScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        LazyColumn(
-            contentPadding = PaddingValues(bottom = spacing.xxl),
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = padding.calculateTopPadding()),
         ) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1.4f)
-                        .background(accents.sage.copy(alpha = 0.35f)),
-                    contentAlignment = Alignment.BottomStart,
-                ) {
-                    Column(Modifier.padding(spacing.lg)) {
-                        Text(
-                            "Mona",
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                        Text(
-                            "Monstera deliciosa · indoor · East window",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+            when (val s = state) {
+                PlantDetailUiState.Loading -> CenteredSpinner()
+                PlantDetailUiState.NotFound -> CenteredMessage("We couldn't find that plant.")
+                is PlantDetailUiState.Error -> CenteredMessage(s.message)
+                is PlantDetailUiState.Ready -> ReadyContent(
+                    state = s,
+                    onDiagnose = onDiagnose,
+                    onJournal = onJournal,
+                )
             }
-            item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(spacing.md),
-                ) {
-                    Vital("Water", "in 2d", accents.terracotta)
-                    Vital("Light", "medium", MaterialTheme.colorScheme.primary)
-                    Vital("Humidity", "moderate", accents.sage)
-                }
+        }
+    }
+}
+
+@Composable
+private fun ReadyContent(
+    state: PlantDetailUiState.Ready,
+    onDiagnose: () -> Unit,
+    onJournal: () -> Unit,
+) {
+    val spacing = LocalFloraSpacing.current
+    val accents = LocalFloraAccents.current
+    val plant = state.plant
+    val species = state.species
+
+    LazyColumn(
+        contentPadding = PaddingValues(bottom = spacing.xxl),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        item {
+            Hero(plant = plant, species = species, accent = accents.sage)
+        }
+        item {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(spacing.md),
+            ) {
+                Vital(
+                    label = "Water",
+                    value = state.upcoming
+                        .firstOrNull { it.type == CareTaskType.WATER }
+                        ?.label
+                        ?.substringBefore(" · ")
+                        ?: "None scheduled",
+                    accent = accents.terracotta,
+                )
+                Vital(
+                    label = "Light",
+                    value = species?.lightNeed?.display() ?: "—",
+                    accent = MaterialTheme.colorScheme.primary,
+                )
+                Vital(
+                    label = "Humidity",
+                    value = species?.humidityNeed?.display() ?: "—",
+                    accent = accents.sage,
+                )
             }
-            item {
-                Column(Modifier.padding(horizontal = spacing.md)) {
+        }
+        item {
+            Column(Modifier.padding(horizontal = spacing.md)) {
+                Text(
+                    "Upcoming care",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.height(spacing.sm))
+                if (state.upcoming.isEmpty()) {
                     Text(
-                        "Upcoming care",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        "·  Nothing scheduled right now",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 4.dp),
                     )
-                    Spacer(Modifier.height(spacing.sm))
-                    listOf(
-                        "Tomorrow · 07:00 · Water",
-                        "Saturday · Fertilize (monthly)",
-                        "Next week · Rotate a quarter turn",
-                    ).forEach {
+                } else {
+                    state.upcoming.forEach {
                         Text(
-                            "·  $it",
+                            "·  ${it.label}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(vertical = 4.dp),
@@ -129,48 +163,96 @@ fun PlantDetailScreen(
                     }
                 }
             }
+        }
+        if (plant.notes.isNotBlank()) {
             item {
-                Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.lg)) {
+                Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.md)) {
                     Text(
-                        "Journal",
+                        "Notes",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Spacer(Modifier.height(spacing.sm))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                        items(listOf("j1", "j2", "j3", "j4")) {
-                            Box(
-                                modifier = Modifier
-                                    .height(96.dp)
-                                    .aspectRatio(3f / 4f)
-                                    .background(
-                                        accents.paperGrain,
-                                        shape = RoundedCornerShape(14.dp),
-                                    ),
-                            )
-                        }
-                    }
+                    Spacer(Modifier.height(spacing.xs))
+                    Text(
+                        plant.notes,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
+        }
+        if (species?.careNotes?.isNotBlank() == true) {
             item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = spacing.md),
-                ) {
-                    FilledTonalButton(onClick = onDiagnose, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Outlined.HealthAndSafety, contentDescription = null)
-                        Spacer(Modifier.padding(horizontal = 4.dp))
-                        Text("Diagnose")
-                    }
-                    OutlinedButton(onClick = onJournal, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Outlined.PhotoCamera, contentDescription = null)
-                        Spacer(Modifier.padding(horizontal = 4.dp))
-                        Text("New photo")
-                    }
+                Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.sm)) {
+                    Text(
+                        "Care tips",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(spacing.xs))
+                    Text(
+                        species.careNotes,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
+        }
+        item {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spacing.md, vertical = spacing.md),
+            ) {
+                FilledTonalButton(onClick = onDiagnose, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Outlined.HealthAndSafety, contentDescription = null)
+                    Spacer(Modifier.padding(horizontal = 4.dp))
+                    Text("Diagnose")
+                }
+                OutlinedButton(onClick = onJournal, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Outlined.PhotoCamera, contentDescription = null)
+                    Spacer(Modifier.padding(horizontal = 4.dp))
+                    Text("New photo")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Hero(plant: Plant, species: Species?, accent: Color) {
+    val spacing = LocalFloraSpacing.current
+    val subtitle = buildString {
+        if (species != null) {
+            append(species.scientificName)
+            append(" · ")
+        }
+        append(plant.locationTag.display())
+        if (plant.notes.isNotBlank()) {
+            append(" · ")
+            append(plant.notes)
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1.4f)
+            .background(accent.copy(alpha = 0.35f)),
+        contentAlignment = Alignment.BottomStart,
+    ) {
+        Column(Modifier.padding(spacing.lg)) {
+            Text(
+                plant.nickname,
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -200,3 +282,20 @@ private fun Vital(label: String, value: String, accent: Color) {
     )
 }
 
+@Composable
+private fun CenteredSpinner() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun CenteredMessage(message: String) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}

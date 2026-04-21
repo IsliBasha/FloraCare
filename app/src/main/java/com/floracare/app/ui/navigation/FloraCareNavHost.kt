@@ -59,7 +59,15 @@ fun FloraCareNavHost(
             )
         }
         composable<FloraRoute.Identify> {
-            IdentifyScreen(onBack = { navController.popBackStack() })
+            IdentifyScreen(
+                onBack = { navController.popBackStack() },
+                onDone = {
+                    navController.popBackStack(
+                        route = FloraRoute.PlantList,
+                        inclusive = false,
+                    )
+                },
+            )
         }
         composable<FloraRoute.Diagnose> {
             DiagnoseScreen(onBack = { navController.popBackStack() })
