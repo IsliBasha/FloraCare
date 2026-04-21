@@ -66,7 +66,17 @@ fun PlantListScreen(
     val plants: List<PlantCardUi> = (state as? PlantListUiState.Success)?.plants.orEmpty()
     val headerSubtitle = when (val s = state) {
         PlantListUiState.Loading -> "Loading your garden…"
-        is PlantListUiState.Success -> "${s.plants.size} plants · tap a card to open"
+        is PlantListUiState.Success -> buildString {
+            append(s.plants.size).append(if (s.plants.size == 1) " plant" else " plants")
+            append(" · ")
+            append(
+                when (s.duesToday) {
+                    0 -> "nothing due today"
+                    1 -> "1 due today"
+                    else -> "${s.duesToday} due today"
+                },
+            )
+        }
         is PlantListUiState.Error -> "Error: ${s.message}"
     }
 
