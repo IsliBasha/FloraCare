@@ -8,7 +8,15 @@ sealed interface IdentifyUiState {
     data object Ready : IdentifyUiState
     data object Capturing : IdentifyUiState
     data object Classifying : IdentifyUiState
-    data class Picker(val predictions: List<Prediction>) : IdentifyUiState
+    /**
+     * [lowConfidence] is true when the top-1 score falls below an empirical
+     * threshold — the UI surfaces a "try another angle" hint without blocking
+     * the picker so the user can still proceed if a result looks right.
+     */
+    data class Picker(
+        val predictions: List<Prediction>,
+        val lowConfidence: Boolean = false,
+    ) : IdentifyUiState
     data class Naming(
         val selectedLabel: String,
         val predictions: List<Prediction>,

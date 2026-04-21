@@ -92,6 +92,25 @@ class IdentifyViewModelTest {
         val s = vm.state.value
         assertTrue("expected Picker, got $s", s is IdentifyUiState.Picker)
         assertEquals(3, (s as IdentifyUiState.Picker).predictions.size)
+        assertTrue("top1=0.9 should not flag low confidence", !s.lowConfidence)
+    }
+
+    @Test
+    fun `top1 below threshold flags low confidence`() = runTest(dispatcher) {
+        val (vm, _) = buildVm(
+            classifier = FakeClassifier(
+                listOf(
+                    Prediction("Maranta leuconeura", 0.08f),
+                    Prediction("Calathea orbifolia", 0.05f),
+                    Prediction("Stromanthe sanguinea", 0.03f),
+                ),
+            ),
+        )
+        vm.onPermissionGranted()
+        vm.onBitmapCaptured(bitmap)
+
+        val s = vm.state.value as IdentifyUiState.Picker
+        assertTrue("top1=0.08 should flag low confidence", s.lowConfidence)
     }
 
     @Test

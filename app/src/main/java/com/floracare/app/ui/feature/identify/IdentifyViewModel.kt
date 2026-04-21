@@ -59,7 +59,9 @@ class IdentifyViewModel @Inject constructor(
                     _state.value = if (preds.isEmpty()) {
                         IdentifyUiState.Error("No species predictions returned")
                     } else {
-                        IdentifyUiState.Picker(preds)
+                        val lowConfidence =
+                            (preds.firstOrNull()?.confidence ?: 0f) < LOW_CONFIDENCE_THRESHOLD
+                        IdentifyUiState.Picker(preds, lowConfidence = lowConfidence)
                     }
                 }
                 .onFailure { t ->
@@ -119,5 +121,14 @@ class IdentifyViewModel @Inject constructor(
                     _state.value = IdentifyUiState.Error(it.message ?: "Save failed")
                 }
         }
+    }
+
+    companion object {
+        /**
+         * Empirical threshold for AIY Vision Plants V1 — below this, the top-3
+         * are typically near-uniform noise after `background` is filtered, so
+         * the UI should nudge the user to try again.
+         */
+        const val LOW_CONFIDENCE_THRESHOLD: Float = 0.15f
     }
 }

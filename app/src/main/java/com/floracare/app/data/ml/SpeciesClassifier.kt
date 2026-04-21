@@ -3,6 +3,7 @@ package com.floracare.app.data.ml
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import com.floracare.app.BuildConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -39,8 +40,32 @@ class TfliteSpeciesClassifier @Inject constructor(
             val activeRunner = ensureRunner() ?: return@withContext MOCK_TOP3.take(k)
             val input = bitmap.preprocessForModel(INPUT_SIDE)
             val logits = runnerLock.withLock { activeRunner.run(input) }
+            if (BuildConfig.DEBUG) logTopRawForDebug(logits, model.labels)
             parseTopK(logits, model.labels, k)
         }
+
+    /**
+     * Debug-only diagnostic: logs the unfiltered top-10 raw dequantised scores
+     * with labels so we can see what the model actually predicted *before* the
+     * `background` / blank filter in [parseTopK]. Kept off the hot path in
+     * release builds via [BuildConfig.DEBUG].
+     */
+    private fun logTopRawForDebug(logits: FloatArray, labels: List<String>) {
+        val usable = minOf(logits.size, labels.size)
+        if (usable == 0) return
+        val top = (0 until usable)
+            .sortedByDescending { logits[it] }
+            .take(DEBUG_TOP_N)
+        val summary = buildString {
+            append("raw top-$DEBUG_TOP_N: ")
+            top.forEachIndexed { i, idx ->
+                if (i > 0) append(", ")
+                val label = labels[idx].ifBlank { "(blank)" }
+                append("%s=%.4f".format(label, logits[idx]))
+            }
+        }
+        Log.d(TAG, summary)
+    }
 
     private suspend fun ensureRunner(): TfliteRunner? {
         runner?.let { return it }
@@ -61,6 +86,7 @@ class TfliteSpeciesClassifier @Inject constructor(
         const val MODEL_NAME = "plant_species_v1.tflite"
         const val LABELS_NAME = "species_labels.txt"
         private const val INPUT_SIDE = 224
+        private const val DEBUG_TOP_N = 10
 
         private val MOCK_TOP3 = listOf(
             Prediction("Monstera deliciosa", 0.87f),

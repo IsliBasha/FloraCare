@@ -186,6 +186,7 @@ private fun CameraStage(
     when (val current = state) {
         is IdentifyUiState.Picker -> PickerSheet(
             predictions = current.predictions,
+            lowConfidence = current.lowConfidence,
             onSelect = onPredictionSelected,
             onDismiss = onRetake,
         )
@@ -243,6 +244,7 @@ private fun ShutterRow(
 @Composable
 private fun PickerSheet(
     predictions: List<Prediction>,
+    lowConfidence: Boolean,
     onSelect: (Prediction) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -263,6 +265,10 @@ private fun PickerSheet(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
+            if (lowConfidence) {
+                Spacer(Modifier.height(8.dp))
+                LowConfidenceBanner()
+            }
             Spacer(Modifier.height(8.dp))
             predictions.forEachIndexed { index, prediction ->
                 PredictionRow(prediction = prediction, onClick = { onSelect(prediction) })
@@ -299,6 +305,30 @@ private fun PredictionRow(prediction: Prediction, onClick: () -> Unit) {
             )
         }
         TextButton(onClick = onClick) { Text("Choose") }
+    }
+}
+
+@Composable
+private fun LowConfidenceBanner() {
+    Surface(
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            Text(
+                "Low confidence match",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Text(
+                "Try a closer, better-lit shot of a single leaf — or pick the " +
+                    "closest match and rename it.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+        }
     }
 }
 
