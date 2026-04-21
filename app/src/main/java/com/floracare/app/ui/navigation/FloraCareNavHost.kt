@@ -18,6 +18,7 @@ import com.floracare.app.ui.feature.settings.SettingsScreen
 
 @Composable
 fun FloraCareNavHost(
+    startDestination: FloraRoute = FloraRoute.PlantList,
     deepLinkPlantId: String? = null,
     deepLinkKey: Int? = null,
     onDeepLinkConsumed: () -> Unit = {},
@@ -31,9 +32,16 @@ fun FloraCareNavHost(
         }
     }
 
-    NavHost(navController = navController, startDestination = FloraRoute.PlantList) {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable<FloraRoute.Onboarding> {
-            OnboardingScreen(onDone = { navController.navigate(FloraRoute.PlantList) })
+            OnboardingScreen(
+                onDone = {
+                    navController.navigate(FloraRoute.PlantList) {
+                        popUpTo(FloraRoute.Onboarding) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
         }
         composable<FloraRoute.PlantList> {
             PlantListScreen(

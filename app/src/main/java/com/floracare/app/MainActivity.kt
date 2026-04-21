@@ -5,9 +5,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import com.floracare.app.data.notification.NotificationDispatcher
+import com.floracare.app.ui.AppStartViewModel
 import com.floracare.app.ui.navigation.FloraCareNavHost
 import com.floracare.app.ui.theme.FloraCareTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,6 +29,8 @@ class MainActivity : ComponentActivity() {
      */
     private val deepLink = MutableStateFlow<DeepLink?>(null)
 
+    private val appStart: AppStartViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -30,12 +38,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val current by deepLink.collectAsState()
+            val startDestination by appStart.startDestination.collectAsState()
             FloraCareTheme {
-                FloraCareNavHost(
-                    deepLinkPlantId = current?.plantId,
-                    deepLinkKey = current?.seq,
-                    onDeepLinkConsumed = { deepLink.value = null },
-                )
+                // Keep a blank themed surface on screen until the VM resolves
+                // the route so we never flash Plant list before Onboarding.
+                if (startDestination == null) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.background,
+                        modifier = Modifier.fillMaxSize(),
+                    ) {}
+                } else {
+                    FloraCareNavHost(
+                        startDestination = startDestination!!,
+                        deepLinkPlantId = current?.plantId,
+                        deepLinkKey = current?.seq,
+                        onDeepLinkConsumed = { deepLink.value = null },
+                    )
+                }
             }
         }
     }
