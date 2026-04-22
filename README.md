@@ -88,4 +88,3 @@ handoffs explicit.
 ./gradlew :app:connectedDebugAndroidTest  # needs device/emulator
 ```
 
-Coverage targets and TDD are enforced via the global rules under `~/.claude/rules/`.
