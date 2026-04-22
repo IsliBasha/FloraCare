@@ -34,7 +34,11 @@ import com.floracare.app.ui.theme.LocalFloraSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddPlantScreen(onIdentifyClick: () -> Unit, onBack: () -> Unit) {
+fun AddPlantScreen(
+    onIdentifyClick: () -> Unit,
+    onManualClick: () -> Unit,
+    onBack: () -> Unit,
+) {
     val spacing = LocalFloraSpacing.current
     Scaffold(
         topBar = {
@@ -85,11 +89,10 @@ fun AddPlantScreen(onIdentifyClick: () -> Unit, onBack: () -> Unit) {
                 )
                 ActionTile(
                     title = "Enter manually",
-                    subtitle = "Coming soon",
+                    subtitle = "Nickname + details",
                     accentTitle = false,
-                    onClick = { /* manual entry ships in a later sprint */ },
+                    onClick = onManualClick,
                     modifier = Modifier.weight(1f),
-                    enabled = false,
                     icon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
                 )
             }

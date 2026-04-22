@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.floracare.app.ui.feature.addplant.AddPlantManualScreen
 import com.floracare.app.ui.feature.addplant.AddPlantScreen
 import com.floracare.app.ui.feature.dashboard.DashboardScreen
 import com.floracare.app.ui.feature.diagnose.DiagnoseScreen
@@ -63,7 +64,19 @@ fun FloraCareNavHost(
         composable<FloraRoute.AddPlant> {
             AddPlantScreen(
                 onIdentifyClick = { navController.navigate(FloraRoute.Identify) },
+                onManualClick = { navController.navigate(FloraRoute.AddPlantManual) },
                 onBack = { navController.popBackStack() },
+            )
+        }
+        composable<FloraRoute.AddPlantManual> {
+            AddPlantManualScreen(
+                onBack = { navController.popBackStack() },
+                onSaved = {
+                    navController.popBackStack(
+                        route = FloraRoute.PlantList,
+                        inclusive = false,
+                    )
+                },
             )
         }
         composable<FloraRoute.Identify> {
