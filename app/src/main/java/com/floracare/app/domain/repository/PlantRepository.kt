@@ -22,6 +22,7 @@ interface PlantRepository {
     fun observeAllOpenTasks(): Flow<List<CareTask>>
     suspend fun logCare(entry: CareLog)
     suspend fun recentLogs(plantId: String, since: Instant): List<CareLog>
+    fun observeLogsSince(since: Instant): Flow<List<CareLog>>
     suspend fun upsertTask(task: CareTask)
     suspend fun markTaskComplete(taskId: String, at: Instant)
     suspend fun snoozeTask(taskId: String, until: Instant)

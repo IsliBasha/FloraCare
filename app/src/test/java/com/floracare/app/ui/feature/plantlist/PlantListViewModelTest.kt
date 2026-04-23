@@ -197,6 +197,9 @@ class PlantListViewModelTest {
         override suspend fun recentLogs(plantId: String, since: Instant): List<CareLog> =
             emptyList()
 
+        override fun observeLogsSince(since: Instant): Flow<List<CareLog>> =
+            MutableStateFlow(emptyList())
+
         override suspend fun upsertTask(task: CareTask) = Unit
         override suspend fun markTaskComplete(taskId: String, at: Instant) = Unit
         override suspend fun snoozeTask(taskId: String, until: Instant) = Unit

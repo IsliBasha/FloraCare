@@ -89,6 +89,7 @@ class CareActionWorkerTest {
         override fun observeAllOpenTasks(): Flow<List<CareTask>> = emptyFlow()
         override suspend fun logCare(entry: CareLog) = Unit
         override suspend fun recentLogs(plantId: String, since: Instant): List<CareLog> = emptyList()
+        override fun observeLogsSince(since: Instant): Flow<List<CareLog>> = emptyFlow()
         override suspend fun upsertTask(task: CareTask) = Unit
 
         override suspend fun markTaskComplete(taskId: String, at: Instant) {

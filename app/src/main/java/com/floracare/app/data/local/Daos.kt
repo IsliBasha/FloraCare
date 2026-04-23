@@ -72,6 +72,9 @@ interface CareLogDao {
     @Query("SELECT * FROM care_log WHERE plantId = :plantId AND performedAt >= :since ORDER BY performedAt DESC")
     suspend fun findRecent(plantId: String, since: Instant): List<CareLogEntity>
 
+    @Query("SELECT * FROM care_log WHERE performedAt >= :since ORDER BY performedAt DESC")
+    fun observeSince(since: Instant): Flow<List<CareLogEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(log: CareLogEntity)
 }

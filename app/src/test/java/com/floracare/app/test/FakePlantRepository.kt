@@ -7,6 +7,7 @@ import com.floracare.app.domain.model.Species
 import com.floracare.app.domain.repository.PlantRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 
 /**
@@ -17,6 +18,7 @@ class FakePlantRepository : PlantRepository {
     val plants = MutableStateFlow<List<Plant>>(emptyList())
     val species = MutableStateFlow<List<Species>>(emptyList())
     val openTasks = MutableStateFlow<List<CareTask>>(emptyList())
+    val logs = MutableStateFlow<List<CareLog>>(emptyList())
 
     val upsertedPlants = mutableListOf<Plant>()
     val upsertedSpecies = mutableListOf<Species>()
@@ -57,10 +59,14 @@ class FakePlantRepository : PlantRepository {
 
     override suspend fun logCare(entry: CareLog) {
         loggedCare += entry
+        logs.value = logs.value + entry
     }
 
     override suspend fun recentLogs(plantId: String, since: Instant): List<CareLog> =
         loggedCare.filter { it.plantId == plantId && it.performedAt >= since }
+
+    override fun observeLogsSince(since: Instant): Flow<List<CareLog>> =
+        logs.map { all -> all.filter { it.performedAt >= since } }
 
     override suspend fun upsertTask(task: CareTask) {
         upsertedTasks += task

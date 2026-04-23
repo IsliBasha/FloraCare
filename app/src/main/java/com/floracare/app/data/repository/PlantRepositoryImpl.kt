@@ -57,6 +57,9 @@ class PlantRepositoryImpl @Inject constructor(
     override suspend fun recentLogs(plantId: String, since: Instant): List<CareLog> =
         logDao.findRecent(plantId, since).map { it.toDomain() }
 
+    override fun observeLogsSince(since: Instant): Flow<List<CareLog>> =
+        logDao.observeSince(since).map { list -> list.map { it.toDomain() } }
+
     override suspend fun upsertTask(task: CareTask) = taskDao.upsert(
         CareTaskEntity(
             id = task.id,
