@@ -117,6 +117,26 @@ class AddPlantManualViewModelTest {
     }
 
     @Test
+    fun `manual picker hides the AIY background species even when the query matches`() {
+        val (vm, _) = vm(
+            seededSpecies = listOf(
+                species("sp-bg", common = "background", scientific = "background"),
+                species("sp-1", common = "Monstera", scientific = "Monstera deliciosa"),
+            ),
+        )
+        // Substring search for "back" would otherwise surface the background row.
+        vm.onSpeciesQueryChange("back")
+        assertTrue(
+            "background species must be filtered out of the manual picker",
+            vm.state.value.speciesMatches.isEmpty(),
+        )
+        // Normal species lookup still works alongside the filter.
+        vm.onSpeciesQueryChange("mon")
+        assertEquals(1, vm.state.value.speciesMatches.size)
+        assertEquals("sp-1", vm.state.value.speciesMatches[0].id)
+    }
+
+    @Test
     fun `selecting a species clears matches and sets the query to common name`() {
         val (vm, _) = vm(seededSpecies = listOf(species("sp-1", "Monstera", "Monstera deliciosa")))
         vm.onSpeciesQueryChange("mon")

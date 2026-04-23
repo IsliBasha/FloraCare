@@ -127,8 +127,12 @@ class IdentifyViewModel @Inject constructor(
         /**
          * Empirical threshold for AIY Vision Plants V1 — below this, the top-3
          * are typically near-uniform noise after `background` is filtered, so
-         * the UI should nudge the user to try again.
+         * the UI should nudge the user to try again. Calibrated on-device with
+         * [com.floracare.app.data.ml.AiyCalibrationTest] against real fixtures:
+         * an out-of-vocabulary snake plant clusters at ~0.08, an in-distribution
+         * conifer lands at ~0.45, so 0.25 cleanly separates "model is guessing"
+         * from "model recognised the plant".
          */
-        const val LOW_CONFIDENCE_THRESHOLD: Float = 0.15f
+        const val LOW_CONFIDENCE_THRESHOLD: Float = 0.25f
     }
 }

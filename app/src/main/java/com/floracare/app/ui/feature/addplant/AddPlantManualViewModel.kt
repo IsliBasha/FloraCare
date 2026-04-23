@@ -48,7 +48,9 @@ class AddPlantManualViewModel @Inject constructor(
         _state.update { it.copy(acquiredAt = clock.now()) }
         viewModelScope.launch {
             plants.observeAllSpecies().collect { list ->
-                allSpecies = list
+                // The AIY classifier auto-creates a "background" species row whenever the
+                // model's top-1 is the catch-all class — it's noise in the manual picker.
+                allSpecies = list.filterNot { it.isAiyBackground() }
                 refreshMatches()
             }
         }
@@ -170,6 +172,10 @@ class AddPlantManualViewModel @Inject constructor(
     private fun Species.matches(query: String): Boolean =
         commonName.contains(query, ignoreCase = true) ||
             scientificName.contains(query, ignoreCase = true)
+
+    private fun Species.isAiyBackground(): Boolean =
+        commonName.equals("background", ignoreCase = true) ||
+            scientificName.equals("background", ignoreCase = true)
 
     companion object {
         private const val MAX_MATCHES = 8
