@@ -14,7 +14,7 @@ import androidx.room.TypeConverters
         DiagnosisResultEntity::class,
         WeatherSnapshotEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

@@ -10,6 +10,7 @@ import com.floracare.app.data.local.JournalDao
 import com.floracare.app.data.local.PlantDao
 import com.floracare.app.data.local.SpeciesDao
 import com.floracare.app.data.local.WeatherDao
+import com.floracare.app.data.local.migrations.MIGRATION_1_2
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,6 +25,7 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideDb(@ApplicationContext ctx: Context): FloraCareDatabase =
         Room.databaseBuilder(ctx, FloraCareDatabase::class.java, "floracare.db")
+            .addMigrations(MIGRATION_1_2)
             .fallbackToDestructiveMigration()
             .build()
 

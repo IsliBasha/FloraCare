@@ -13,7 +13,10 @@ import com.floracare.app.domain.model.SoilMoistureNote
 import com.floracare.app.domain.model.Toxicity
 import kotlinx.datetime.Instant
 
-@Entity(tableName = "species")
+@Entity(
+    tableName = "species",
+    indices = [Index("providerSpeciesId")],
+)
 data class SpeciesEntity(
     @PrimaryKey val id: String,
     val scientificName: String,
@@ -25,6 +28,12 @@ data class SpeciesEntity(
     val tempMaxC: Float,
     val toxicity: Toxicity,
     val careNotes: String,
+    val provider: String = "local",
+    val providerSpeciesId: String? = null,
+    val fetchedAt: Instant? = null,
+    val family: String? = null,
+    val genus: String? = null,
+    val imageUrl: String? = null,
 )
 
 @Entity(

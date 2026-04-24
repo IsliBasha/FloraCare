@@ -16,6 +16,12 @@ fun SpeciesEntity.toDomain(): Species = Species(
     temperatureRangeC = tempMinC..tempMaxC,
     toxicity = toxicity,
     careNotes = careNotes,
+    provider = provider,
+    providerSpeciesId = providerSpeciesId,
+    fetchedAt = fetchedAt,
+    family = family,
+    genus = genus,
+    imageUrl = imageUrl,
 )
 
 fun Species.toEntity(): SpeciesEntity = SpeciesEntity(
@@ -29,6 +35,12 @@ fun Species.toEntity(): SpeciesEntity = SpeciesEntity(
     tempMaxC = temperatureRangeC.endInclusive,
     toxicity = toxicity,
     careNotes = careNotes,
+    provider = provider,
+    providerSpeciesId = providerSpeciesId,
+    fetchedAt = fetchedAt,
+    family = family,
+    genus = genus,
+    imageUrl = imageUrl,
 )
 
 fun PlantEntity.toDomain(): Plant = Plant(
