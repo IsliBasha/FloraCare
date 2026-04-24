@@ -8,21 +8,29 @@ import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Low-level Perenual wrapper. Translates Retrofit exceptions into the closed
- * [RemoteResult] hierarchy so the repository can pattern-match without
- * leaking HTTP concerns.
+ * Low-level Perenual seam used by the species repository. Kept as an interface
+ * so tests can swap in a deterministic fake without mocking Retrofit.
+ */
+interface PerenualRemoteDataSource {
+    suspend fun search(query: String): RemoteResult<SpeciesSearchItem>
+    suspend fun details(id: Long): RemoteResult<SpeciesDetailsResponse>
+}
+
+/**
+ * Retrofit-backed implementation. Translates Retrofit exceptions into the
+ * closed [RemoteResult] hierarchy so HTTP concerns never leak upward.
  *
  * When [BuildConfig.PERENUAL_KEY] is blank (developer machines without a key)
  * we short-circuit to [RemoteResult.Network] so the app still runs and the
  * repository falls back to stale cache / synth rows.
  */
 @Singleton
-internal class PerenualRemoteDataSource @Inject constructor(
+class PerenualRemoteDataSourceImpl @Inject constructor(
     private val api: PerenualApi,
-) {
+) : PerenualRemoteDataSource {
     private val hasKey: Boolean = BuildConfig.PERENUAL_KEY.isNotBlank()
 
-    suspend fun search(query: String): RemoteResult<SpeciesSearchItem> {
+    override suspend fun search(query: String): RemoteResult<SpeciesSearchItem> {
         if (!hasKey) return RemoteResult.Network(IOException("PERENUAL_KEY not configured"))
         return safeCall {
             val hits = api.search(query).data
@@ -30,7 +38,7 @@ internal class PerenualRemoteDataSource @Inject constructor(
         }.toResult()
     }
 
-    suspend fun details(id: Long): RemoteResult<SpeciesDetailsResponse> {
+    override suspend fun details(id: Long): RemoteResult<SpeciesDetailsResponse> {
         if (!hasKey) return RemoteResult.Network(IOException("PERENUAL_KEY not configured"))
         return safeCall { api.details(id) }.toResult()
     }
@@ -74,7 +82,7 @@ internal class PerenualRemoteDataSource @Inject constructor(
  * — [com.floracare.app.data.repository.SpeciesRepositoryImpl] translates it to the
  * domain [com.floracare.app.domain.repository.SpeciesLookupResult].
  */
-internal sealed interface RemoteResult<out T : Any> {
+sealed interface RemoteResult<out T : Any> {
     data class Success<T : Any>(val value: T) : RemoteResult<T>
     data object Empty : RemoteResult<Nothing>
     data object RateLimited : RemoteResult<Nothing>
