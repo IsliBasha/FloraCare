@@ -100,9 +100,13 @@ class IdentifyViewModel @Inject constructor(
             _state.value = IdentifyUiState.Error("Please enter a nickname")
             return
         }
+        val topConfidence = current.predictions.firstOrNull { it.label == current.selectedLabel }
+            ?.confidence
+            ?: current.predictions.firstOrNull()?.confidence
+            ?: 0f
         viewModelScope.launch {
             runCatching {
-                val speciesId = resolveSpecies(current.selectedLabel)
+                val speciesId = resolveSpecies(current.selectedLabel, topConfidence)
                 val plantId = plantIdGenerator()
                 plants.upsert(
                     Plant(

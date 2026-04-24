@@ -32,8 +32,10 @@ import kotlin.time.Duration.Companion.days
 class SpeciesRepositoryImpl @Inject constructor(
     private val speciesDao: SpeciesDao,
     private val remote: PerenualRemoteDataSource,
-    private val clock: Clock = Clock.System,
 ) : SpeciesRepository {
+
+    /** Test seam — override to pin time in unit tests. */
+    internal var clock: Clock = Clock.System
 
     override suspend fun lookup(
         scientificName: String,

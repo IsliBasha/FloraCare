@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import com.floracare.app.data.ml.Prediction
 import com.floracare.app.data.ml.SpeciesClassifier
 import com.floracare.app.domain.usecase.ResolveOrCreateSpeciesUseCase
+import com.floracare.app.domain.usecase.SpeciesLookupUseCase
 import com.floracare.app.test.FakePlantRepository
+import com.floracare.app.test.FakeSpeciesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -46,7 +48,8 @@ class IdentifyViewModelTest {
         repo: FakePlantRepository = FakePlantRepository(),
         idGen: () -> String = { "pl-fixed" },
     ): Pair<IdentifyViewModel, FakePlantRepository> {
-        val useCase = ResolveOrCreateSpeciesUseCase(repo).apply { idGenerator = { "sp-gen" } }
+        val lookup = SpeciesLookupUseCase(FakeSpeciesRepository())
+        val useCase = ResolveOrCreateSpeciesUseCase(repo, lookup).apply { idGenerator = { "sp-gen" } }
         val vm = IdentifyViewModel(
             classifier = classifier,
             resolveSpecies = useCase,

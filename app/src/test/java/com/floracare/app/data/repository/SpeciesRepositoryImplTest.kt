@@ -67,7 +67,7 @@ class SpeciesRepositoryImplTest {
         dao: FakeSpeciesDao = FakeSpeciesDao(),
         remote: FakePerenualRemoteDataSource = FakePerenualRemoteDataSource(),
     ): Triple<SpeciesRepositoryImpl, FakeSpeciesDao, FakePerenualRemoteDataSource> {
-        val repo = SpeciesRepositoryImpl(dao, remote, fixedClock)
+        val repo = SpeciesRepositoryImpl(dao, remote).apply { clock = fixedClock }
         return Triple(repo, dao, remote)
     }
 

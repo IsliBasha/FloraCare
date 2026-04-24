@@ -6,7 +6,9 @@ import com.floracare.app.domain.model.LocationTag
 import com.floracare.app.domain.model.Species
 import com.floracare.app.domain.model.Toxicity
 import com.floracare.app.domain.usecase.ResolveOrCreateSpeciesUseCase
+import com.floracare.app.domain.usecase.SpeciesLookupUseCase
 import com.floracare.app.test.FakePlantRepository
+import com.floracare.app.test.FakeSpeciesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -54,7 +56,8 @@ class AddPlantManualViewModelTest {
         seededSpecies: List<Species> = emptyList(),
     ): Pair<AddPlantManualViewModel, FakePlantRepository> {
         val repo = FakePlantRepository().apply { species.value = seededSpecies }
-        val useCase = ResolveOrCreateSpeciesUseCase(repo).apply { idGenerator = { "sp-gen" } }
+        val lookup = SpeciesLookupUseCase(FakeSpeciesRepository())
+        val useCase = ResolveOrCreateSpeciesUseCase(repo, lookup).apply { idGenerator = { "sp-gen" } }
         val vm = AddPlantManualViewModel(repo, useCase).apply {
             plantIdGenerator = { "pl-fixed" }
             clock = fixedClock

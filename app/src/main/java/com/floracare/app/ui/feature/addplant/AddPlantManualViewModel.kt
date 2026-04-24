@@ -151,7 +151,9 @@ class AddPlantManualViewModel @Inject constructor(
         snapshot.selectedSpecies?.let { return it.id }
         val query = snapshot.speciesQuery.trim()
         if (query.isEmpty()) return null
-        return resolveSpecies(query)
+        // Manual entry has no classifier score, so treat as low-confidence to
+        // give Perenual a chance to enrich the synth row before we persist it.
+        return resolveSpecies(query, topConfidence = 0f)
     }
 
     private fun refreshMatches() {
