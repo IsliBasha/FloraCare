@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.floracare.app.data.ml.Prediction
 import com.floracare.app.data.ml.SpeciesClassifier
+import com.floracare.app.domain.model.ConfidenceThresholds
 import com.floracare.app.domain.model.LocationTag
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.repository.PlantRepository
@@ -125,14 +126,10 @@ class IdentifyViewModel @Inject constructor(
 
     companion object {
         /**
-         * Empirical threshold for AIY Vision Plants V1 — below this, the top-3
-         * are typically near-uniform noise after `background` is filtered, so
-         * the UI should nudge the user to try again. Calibrated on-device with
-         * [com.floracare.app.data.ml.AiyCalibrationTest] against real fixtures:
-         * an out-of-vocabulary snake plant clusters at ~0.08, an in-distribution
-         * conifer lands at ~0.45, so 0.25 cleanly separates "model is guessing"
-         * from "model recognised the plant".
+         * Alias for [ConfidenceThresholds.LOW_CONFIDENCE] kept so androidTest
+         * references (`AiyCalibrationTest`) compile without churn. The canonical
+         * value lives in the domain layer.
          */
-        const val LOW_CONFIDENCE_THRESHOLD: Float = 0.25f
+        const val LOW_CONFIDENCE_THRESHOLD: Float = ConfidenceThresholds.LOW_CONFIDENCE
     }
 }

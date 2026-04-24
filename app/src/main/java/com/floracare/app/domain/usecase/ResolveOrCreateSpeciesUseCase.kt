@@ -3,6 +3,7 @@ package com.floracare.app.domain.usecase
 import com.floracare.app.domain.model.HumidityNeed
 import com.floracare.app.domain.model.LightNeed
 import com.floracare.app.domain.model.Species
+import com.floracare.app.domain.model.SpeciesDefaults
 import com.floracare.app.domain.model.Toxicity
 import com.floracare.app.domain.repository.PlantRepository
 import java.util.UUID
@@ -37,20 +38,14 @@ class ResolveOrCreateSpeciesUseCase @Inject constructor(
             id = idGenerator(),
             scientificName = normalised,
             commonName = normalised,
-            waterFrequencyDays = DEFAULT_WATER_FREQUENCY_DAYS,
+            waterFrequencyDays = SpeciesDefaults.WATER_FREQUENCY_DAYS,
             lightNeed = LightNeed.MEDIUM,
             humidityNeed = HumidityNeed.MEDIUM,
-            temperatureRangeC = DEFAULT_MIN_TEMP_C..DEFAULT_MAX_TEMP_C,
+            temperatureRangeC = SpeciesDefaults.MIN_TEMP_C..SpeciesDefaults.MAX_TEMP_C,
             toxicity = Toxicity.NONE,
             careNotes = "",
         )
         plants.upsertSpecies(synth)
         return synth.id
-    }
-
-    private companion object {
-        const val DEFAULT_WATER_FREQUENCY_DAYS = 7
-        const val DEFAULT_MIN_TEMP_C = 15f
-        const val DEFAULT_MAX_TEMP_C = 28f
     }
 }
