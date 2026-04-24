@@ -121,6 +121,7 @@ fun IdentifyScreen(
                     onBack = onBack,
                     onPredictionSelected = viewModel::onPredictionSelected,
                     onNamingCancelled = viewModel::onNamingCancelled,
+                    onEnrichingCancelled = viewModel::onEnrichingCancelled,
                     onSave = viewModel::onSave,
                 )
             }
@@ -139,6 +140,7 @@ private fun CameraStage(
     onBack: () -> Unit,
     onPredictionSelected: (Prediction) -> Unit,
     onNamingCancelled: () -> Unit,
+    onEnrichingCancelled: () -> Unit,
     onSave: (String) -> Unit,
 ) {
     val shutter = rememberCameraShutter()
@@ -189,6 +191,10 @@ private fun CameraStage(
             lowConfidence = current.lowConfidence,
             onSelect = onPredictionSelected,
             onDismiss = onRetake,
+        )
+        is IdentifyUiState.Enriching -> EnrichingSheet(
+            selectedLabel = current.selectedLabel,
+            onCancel = onEnrichingCancelled,
         )
         is IdentifyUiState.Naming -> NamingDialog(
             label = current.selectedLabel,
@@ -280,6 +286,43 @@ private fun PickerSheet(
                 Spacer(Modifier.size(6.dp))
                 Text("Retake")
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EnrichingSheet(
+    selectedLabel: String,
+    onCancel: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val spacing = LocalFloraSpacing.current
+    ModalBottomSheet(
+        onDismissRequest = onCancel,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.md, vertical = spacing.md),
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(28.dp))
+            Spacer(Modifier.height(spacing.sm))
+            Text(
+                "Looking up care info…",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                selectedLabel,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(spacing.sm))
+            TextButton(onClick = onCancel) { Text("Cancel") }
         }
     }
 }

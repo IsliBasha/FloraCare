@@ -10,7 +10,9 @@ import com.floracare.app.domain.model.LocationTag
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.repository.PlantRepository
 import com.floracare.app.domain.usecase.ResolveOrCreateSpeciesUseCase
+import com.floracare.app.domain.usecase.SpeciesLookupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,8 +25,11 @@ import javax.inject.Inject
 class IdentifyViewModel @Inject constructor(
     private val classifier: SpeciesClassifier,
     private val resolveSpecies: ResolveOrCreateSpeciesUseCase,
+    private val speciesLookup: SpeciesLookupUseCase,
     private val plants: PlantRepository,
 ) : ViewModel() {
+
+    private var enrichJob: Job? = null
 
     /** Test seam — replace to inject a deterministic id in unit tests. */
     internal var plantIdGenerator: () -> String = { "pl-${UUID.randomUUID()}" }
@@ -73,11 +78,42 @@ class IdentifyViewModel @Inject constructor(
 
     fun onPredictionSelected(prediction: Prediction) {
         val current = _state.value
-        if (current is IdentifyUiState.Picker) {
-            _state.value = IdentifyUiState.Naming(
-                selectedLabel = prediction.label,
-                predictions = current.predictions,
-            )
+        if (current !is IdentifyUiState.Picker) return
+
+        // High-confidence picks never need a second-tier lookup — advance
+        // straight to Naming and let the existing ResolveOrCreateSpeciesUseCase
+        // path do its cache hit / synth fallback inside onSave.
+        if (!current.lowConfidence) {
+            _state.value = IdentifyUiState.Naming(prediction.label, current.predictions)
+            return
+        }
+
+        _state.value = IdentifyUiState.Enriching(prediction.label, current.predictions)
+        enrichJob?.cancel()
+        enrichJob = viewModelScope.launch {
+            runCatching {
+                val cached = plants.findSpeciesByScientificName(prediction.label.trim())
+                if (cached == null) {
+                    // Result is discarded — SpeciesRepository already wrote the
+                    // row if the call succeeded, so onSave will find it.
+                    speciesLookup(prediction.label)
+                }
+            }
+            // Advance to Naming whether the lookup succeeded, failed, or was
+            // skipped because the cache already knew. Offline failures are
+            // silent by design — the resolver falls back to a synth row.
+            if (_state.value is IdentifyUiState.Enriching) {
+                _state.value = IdentifyUiState.Naming(prediction.label, current.predictions)
+            }
+        }
+    }
+
+    fun onEnrichingCancelled() {
+        val current = _state.value
+        if (current is IdentifyUiState.Enriching) {
+            enrichJob?.cancel()
+            enrichJob = null
+            _state.value = IdentifyUiState.Picker(current.predictions, lowConfidence = true)
         }
     }
 

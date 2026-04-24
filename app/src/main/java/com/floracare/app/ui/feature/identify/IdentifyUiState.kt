@@ -17,6 +17,15 @@ sealed interface IdentifyUiState {
         val predictions: List<Prediction>,
         val lowConfidence: Boolean = false,
     ) : IdentifyUiState
+    /**
+     * User picked a low-confidence prediction — we're calling Perenual before
+     * moving on so [Naming] is populated with real taxonomy. Cancel returns
+     * to the [Picker]; success or silent fallback advances to [Naming].
+     */
+    data class Enriching(
+        val selectedLabel: String,
+        val predictions: List<Prediction>,
+    ) : IdentifyUiState
     data class Naming(
         val selectedLabel: String,
         val predictions: List<Prediction>,
