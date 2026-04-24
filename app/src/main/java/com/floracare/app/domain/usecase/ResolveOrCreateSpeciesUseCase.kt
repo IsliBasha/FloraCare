@@ -38,6 +38,7 @@ class ResolveOrCreateSpeciesUseCase @Inject constructor(
         predictedLabel: String,
         topConfidence: Float,
         commonNameHint: String? = null,
+        forceEnrich: Boolean = false,
     ): String {
         val normalised = predictedLabel.trim()
         require(normalised.isNotEmpty()) { "Predicted label must not be blank" }
@@ -46,7 +47,7 @@ class ResolveOrCreateSpeciesUseCase @Inject constructor(
             return existing.id
         }
 
-        if (topConfidence < ConfidenceThresholds.LOW_CONFIDENCE) {
+        if (forceEnrich || topConfidence < ConfidenceThresholds.LOW_CONFIDENCE) {
             when (val remote = lookup(normalised, commonNameHint)) {
                 is SpeciesLookupResult.Fresh -> return remote.species.id
                 is SpeciesLookupResult.Stale -> return remote.species.id

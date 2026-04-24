@@ -33,9 +33,6 @@ interface SpeciesDao {
     @Query("SELECT * FROM species WHERE lower(trim(scientificName)) = lower(trim(:scientificName)) LIMIT 1")
     suspend fun findByScientificName(scientificName: String): SpeciesEntity?
 
-    @Query("SELECT * FROM species WHERE provider = :provider AND providerSpeciesId = :pid LIMIT 1")
-    suspend fun findByProviderId(provider: String, pid: String): SpeciesEntity?
-
     @Query("SELECT * FROM species ORDER BY commonName ASC")
     fun observeAll(): Flow<List<SpeciesEntity>>
 
@@ -44,9 +41,6 @@ interface SpeciesDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(species: SpeciesEntity)
-
-    @Query("UPDATE species SET fetchedAt = :at WHERE id = :id")
-    suspend fun markFetched(id: String, at: Instant)
 
     @Query("SELECT COUNT(*) FROM species")
     suspend fun count(): Int

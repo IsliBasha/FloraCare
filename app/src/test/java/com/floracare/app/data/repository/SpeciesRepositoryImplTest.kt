@@ -21,6 +21,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
+import kotlin.time.Duration.Companion.days
 
 class SpeciesRepositoryImplTest {
 
@@ -67,7 +68,7 @@ class SpeciesRepositoryImplTest {
         dao: FakeSpeciesDao = FakeSpeciesDao(),
         remote: FakePerenualRemoteDataSource = FakePerenualRemoteDataSource(),
     ): Triple<SpeciesRepositoryImpl, FakeSpeciesDao, FakePerenualRemoteDataSource> {
-        val repo = SpeciesRepositoryImpl(dao, remote).apply { clock = fixedClock }
+        val repo = SpeciesRepositoryImpl(dao, remote, fixedClock)
         return Triple(repo, dao, remote)
     }
 
@@ -145,18 +146,58 @@ class SpeciesRepositoryImplTest {
     }
 
     @Test
-    fun `rate-limited with cached row returns Stale RATE_LIMITED`() = runTest {
+    fun `rate-limited with stale-within-usable Perenual row returns Stale RATE_LIMITED`() =
+        runTest {
+            val (repo, dao, remote) = build()
+            val cached = species(
+                id = "sp-perenual-7",
+                scientific = "Ficus lyrata",
+                provider = Species.PROVIDER_PERENUAL,
+                fetchedAt = now - 30.days, // stale (> 7d) but still usable (< 90d)
+            )
+            dao.upsert(cached.toEntityForTest())
+            remote.searchResult = RemoteResult.RateLimited
+
+            val result = repo.lookup("Ficus lyrata")
+
+            assertTrue(result is SpeciesLookupResult.Stale)
+            val stale = result as SpeciesLookupResult.Stale
+            assertEquals(StaleReason.RATE_LIMITED, stale.reason)
+            assertEquals("sp-perenual-7", stale.species.id)
+        }
+
+    @Test
+    fun `rate-limited with expired Perenual row falls through to Offline(null)`() = runTest {
         val (repo, dao, remote) = build()
-        val cached = species(id = "sp-local-1", scientific = "Ficus lyrata")
-        dao.upsert(cached.toEntityForTest())
+        val expired = species(
+            id = "sp-perenual-8",
+            scientific = "Calathea orbifolia",
+            provider = Species.PROVIDER_PERENUAL,
+            fetchedAt = now - 120.days, // past USABLE_TTL
+        )
+        dao.upsert(expired.toEntityForTest())
         remote.searchResult = RemoteResult.RateLimited
 
-        val result = repo.lookup("Ficus lyrata")
+        val result = repo.lookup("Calathea orbifolia")
 
-        assertTrue(result is SpeciesLookupResult.Stale)
-        val stale = result as SpeciesLookupResult.Stale
-        assertEquals(StaleReason.RATE_LIMITED, stale.reason)
-        assertEquals("sp-local-1", stale.species.id)
+        assertTrue(result is SpeciesLookupResult.Offline)
+        assertNull(
+            "expired cache must not be offered as a Stale fallback",
+            (result as SpeciesLookupResult.Offline).cached,
+        )
+    }
+
+    @Test
+    fun `synth local row is never served as Stale — plain Offline on network failure`() = runTest {
+        val (repo, dao, remote) = build()
+        val synth = species(id = "sp-local-1", scientific = "Sansevieria trifasciata")
+        dao.upsert(synth.toEntityForTest())
+        remote.searchResult = RemoteResult.Network(IOException("boom"))
+
+        val result = repo.lookup("Sansevieria trifasciata")
+
+        assertTrue(result is SpeciesLookupResult.Offline)
+        assertNull((result as SpeciesLookupResult.Offline).cached)
     }
 
     @Test
@@ -171,17 +212,26 @@ class SpeciesRepositoryImplTest {
     }
 
     @Test
-    fun `network failure with cached row returns Stale REMOTE_UNAVAILABLE`() = runTest {
-        val (repo, dao, remote) = build()
-        val cached = species(id = "sp-local-2", scientific = "Sansevieria")
-        dao.upsert(cached.toEntityForTest())
-        remote.searchResult = RemoteResult.Network(IOException("boom"))
+    fun `network failure with usable Perenual cache returns Stale REMOTE_UNAVAILABLE`() =
+        runTest {
+            val (repo, dao, remote) = build()
+            val cached = species(
+                id = "sp-perenual-2",
+                scientific = "Sansevieria",
+                provider = Species.PROVIDER_PERENUAL,
+                fetchedAt = now - 10.days,
+            )
+            dao.upsert(cached.toEntityForTest())
+            remote.searchResult = RemoteResult.Network(IOException("boom"))
 
-        val result = repo.lookup("Sansevieria")
+            val result = repo.lookup("Sansevieria")
 
-        assertTrue(result is SpeciesLookupResult.Stale)
-        assertEquals(StaleReason.REMOTE_UNAVAILABLE, (result as SpeciesLookupResult.Stale).reason)
-    }
+            assertTrue(result is SpeciesLookupResult.Stale)
+            assertEquals(
+                StaleReason.REMOTE_UNAVAILABLE,
+                (result as SpeciesLookupResult.Stale).reason,
+            )
+        }
 
     @Test
     fun `common name hint drives remote search query over scientific name`() = runTest {

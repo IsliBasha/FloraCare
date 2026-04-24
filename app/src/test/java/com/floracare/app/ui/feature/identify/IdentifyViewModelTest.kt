@@ -12,9 +12,12 @@ import com.floracare.app.domain.usecase.ResolveOrCreateSpeciesUseCase
 import com.floracare.app.domain.usecase.SpeciesLookupUseCase
 import com.floracare.app.test.FakePlantRepository
 import com.floracare.app.test.FakeSpeciesRepository
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -279,27 +282,69 @@ class IdentifyViewModelTest {
         }
 
     @Test
-    fun `onEnrichingCancelled returns to Picker with low-confidence hint preserved`() =
-        runTest(dispatcher) {
-            // Staging a lookup that never resolves would require a different
-            // dispatcher; we simply assert the cancel path from a state we
-            // force onto the VM via a low-conf pick + synchronous lookup that
-            // lands in Naming. Cancellation from Naming is a separate test,
-            // so here we verify the cancel entry point is idempotent when
-            // called from the wrong state.
-            val (vm, _, _) = buildVm(
-                classifier = FakeClassifier(lowConfPreds),
-                speciesRepo = FakeSpeciesRepository(SpeciesLookupResult.NotFound),
-            )
-            vm.onPermissionGranted()
-            vm.onBitmapCaptured(bitmap)
-            val before = vm.state.value as IdentifyUiState.Picker
-            assertTrue("sanity: low confidence", before.lowConfidence)
+    fun `onEnrichingCancelled from Picker is a no-op`() = runTest(dispatcher) {
+        val (vm, _, _) = buildVm(
+            classifier = FakeClassifier(lowConfPreds),
+            speciesRepo = FakeSpeciesRepository(SpeciesLookupResult.NotFound),
+        )
+        vm.onPermissionGranted()
+        vm.onBitmapCaptured(bitmap)
+        val before = vm.state.value as IdentifyUiState.Picker
+        assertTrue("sanity: low confidence", before.lowConfidence)
 
-            // Calling cancel while in Picker is a no-op.
-            vm.onEnrichingCancelled()
-            assertTrue(vm.state.value is IdentifyUiState.Picker)
+        vm.onEnrichingCancelled()
+        assertTrue(vm.state.value is IdentifyUiState.Picker)
+    }
+
+    @Test
+    fun `onEnrichingCancelled with in-flight lookup returns to Picker`() {
+        // Uses a StandardTestDispatcher so we can pause between the state
+        // transition and the lookup completion.
+        val stepping = StandardTestDispatcher()
+        Dispatchers.setMain(stepping)
+        try {
+            runTest(stepping) {
+                val gate = CompletableDeferred<Unit>()
+                val speciesRepo = FakeSpeciesRepository(SpeciesLookupResult.NotFound).apply {
+                    pendingGate = gate
+                }
+                val repo = FakePlantRepository()
+                val lookup = SpeciesLookupUseCase(speciesRepo)
+                val resolve = ResolveOrCreateSpeciesUseCase(repo, lookup)
+                    .apply { idGenerator = { "sp-gen" } }
+                val vm = IdentifyViewModel(
+                    classifier = FakeClassifier(lowConfPreds),
+                    resolveSpecies = resolve,
+                    speciesLookup = lookup,
+                    plants = repo,
+                ).apply { plantIdGenerator = { "pl-fixed" } }
+
+                vm.onPermissionGranted()
+                vm.onBitmapCaptured(bitmap)
+                advanceUntilIdle()
+                val preds = (vm.state.value as IdentifyUiState.Picker).predictions
+
+                vm.onPredictionSelected(preds.first())
+                advanceUntilIdle() // lookup starts, suspends on the gate
+                assertTrue(
+                    "VM should be Enriching while the lookup is pending",
+                    vm.state.value is IdentifyUiState.Enriching,
+                )
+
+                vm.onEnrichingCancelled()
+                gate.complete(Unit) // unblock the fake so the cancelled job can unwind
+                advanceUntilIdle()
+
+                val picker = vm.state.value as IdentifyUiState.Picker
+                assertTrue(
+                    "cancel must preserve the low-confidence hint",
+                    picker.lowConfidence,
+                )
+            }
+        } finally {
+            Dispatchers.resetMain()
         }
+    }
 
     private class FakeClassifier(private val preds: List<Prediction>) : SpeciesClassifier {
         override val isReady: Boolean = true

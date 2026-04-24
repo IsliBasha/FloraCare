@@ -12,6 +12,7 @@ import com.floracare.app.domain.repository.PlantRepository
 import com.floracare.app.domain.usecase.ResolveOrCreateSpeciesUseCase
 import com.floracare.app.domain.usecase.SpeciesLookupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -88,21 +89,28 @@ class IdentifyViewModel @Inject constructor(
             return
         }
 
-        _state.value = IdentifyUiState.Enriching(prediction.label, current.predictions)
         enrichJob?.cancel()
+        val enrichingState = IdentifyUiState.Enriching(prediction.label, current.predictions)
+        _state.value = enrichingState
         enrichJob = viewModelScope.launch {
-            runCatching {
+            try {
                 val cached = plants.findSpeciesByScientificName(prediction.label.trim())
                 if (cached == null) {
                     // Result is discarded — SpeciesRepository already wrote the
                     // row if the call succeeded, so onSave will find it.
                     speciesLookup(prediction.label)
                 }
+            } catch (e: CancellationException) {
+                // Don't advance if we were cancelled by a newer pick or by
+                // onEnrichingCancelled — the VM already moved on.
+                throw e
+            } catch (_: Throwable) {
+                // Silent fallback: Offline/remote failure falls through to the
+                // Naming transition so the user can still save with synth care.
             }
-            // Advance to Naming whether the lookup succeeded, failed, or was
-            // skipped because the cache already knew. Offline failures are
-            // silent by design — the resolver falls back to a synth row.
-            if (_state.value is IdentifyUiState.Enriching) {
+            // Gate on the exact state we wrote above; a newer pick will have
+            // replaced it, so we must not clobber that with our stale label.
+            if (_state.value === enrichingState) {
                 _state.value = IdentifyUiState.Naming(prediction.label, current.predictions)
             }
         }

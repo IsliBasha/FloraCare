@@ -16,6 +16,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.datetime.Clock
 import javax.inject.Singleton
 
 @Module
@@ -26,8 +27,10 @@ object DatabaseModule {
     fun provideDb(@ApplicationContext ctx: Context): FloraCareDatabase =
         Room.databaseBuilder(ctx, FloraCareDatabase::class.java, "floracare.db")
             .addMigrations(MIGRATION_1_2)
-            .fallbackToDestructiveMigration()
             .build()
+
+    @Provides @Singleton
+    fun provideClock(): Clock = Clock.System
 
     @Provides fun providePlantDao(db: FloraCareDatabase): PlantDao = db.plantDao()
     @Provides fun provideSpeciesDao(db: FloraCareDatabase): SpeciesDao = db.speciesDao()

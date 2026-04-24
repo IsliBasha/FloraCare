@@ -32,10 +32,8 @@ import kotlin.time.Duration.Companion.days
 class SpeciesRepositoryImpl @Inject constructor(
     private val speciesDao: SpeciesDao,
     private val remote: PerenualRemoteDataSource,
+    private val clock: Clock,
 ) : SpeciesRepository {
-
-    /** Test seam — override to pin time in unit tests. */
-    internal var clock: Clock = Clock.System
 
     override suspend fun lookup(
         scientificName: String,
@@ -44,6 +42,7 @@ class SpeciesRepositoryImpl @Inject constructor(
         val normalised = scientificName.trim()
         val now = clock.now()
         val cached = speciesDao.findByScientificName(normalised)?.toDomain()
+        val usableCache = cached?.takeIf { it.isPerenualWithinUsableWindow(now) }
 
         if (cached != null && cached.isPerenualFresh(now)) {
             return SpeciesLookupResult.Fresh(cached)
@@ -51,11 +50,11 @@ class SpeciesRepositoryImpl @Inject constructor(
 
         val query = commonNameHint?.trim()?.takeIf { it.isNotEmpty() } ?: normalised
         return when (val search = remote.search(query)) {
-            is RemoteResult.Success -> fetchDetailsAndPersist(search.value, cached, now)
-            RemoteResult.Empty -> noRemoteMatch(cached, StaleReason.REMOTE_UNAVAILABLE)
-            RemoteResult.RateLimited -> staleOr(cached, StaleReason.RATE_LIMITED)
-            is RemoteResult.Network -> staleOr(cached, StaleReason.REMOTE_UNAVAILABLE)
-            is RemoteResult.Http -> staleOr(cached, StaleReason.REMOTE_UNAVAILABLE)
+            is RemoteResult.Success -> fetchDetailsAndPersist(search.value, usableCache, now)
+            RemoteResult.Empty -> noRemoteMatch(usableCache, StaleReason.REMOTE_UNAVAILABLE)
+            RemoteResult.RateLimited -> staleOr(usableCache, StaleReason.RATE_LIMITED)
+            is RemoteResult.Network -> staleOr(usableCache, StaleReason.REMOTE_UNAVAILABLE)
+            is RemoteResult.Http -> staleOr(usableCache, StaleReason.REMOTE_UNAVAILABLE)
         }
     }
 
@@ -88,10 +87,15 @@ class SpeciesRepositoryImpl @Inject constructor(
         if (cached != null) SpeciesLookupResult.Stale(cached, reason)
         else SpeciesLookupResult.NotFound
 
-    private fun Species.isPerenualFresh(now: Instant): Boolean =
-        provider == Species.PROVIDER_PERENUAL &&
-            fetchedAt != null &&
-            now - fetchedAt!! < FRESH_TTL
+    private fun Species.isPerenualFresh(now: Instant): Boolean {
+        val at = fetchedAt ?: return false
+        return provider == Species.PROVIDER_PERENUAL && now - at < FRESH_TTL
+    }
+
+    private fun Species.isPerenualWithinUsableWindow(now: Instant): Boolean {
+        val at = fetchedAt ?: return false
+        return provider == Species.PROVIDER_PERENUAL && now - at < USABLE_TTL
+    }
 
     private companion object {
         val FRESH_TTL = 7.days
