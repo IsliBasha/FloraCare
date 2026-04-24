@@ -38,7 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil3.compose.AsyncImage
 import com.floracare.app.domain.model.CareTaskType
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
@@ -234,6 +236,10 @@ private fun Hero(plant: Plant, species: Species?, accent: Color) {
             append(plant.notes)
         }
     }
+    // Prefer the user's own photo; fall back to Perenual's species image when
+    // available; otherwise keep the solid accent block. The scrim below keeps
+    // the subtitle legible against any busy photo.
+    val heroImage = plant.coverPhotoUri ?: species?.imageUrl
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -241,6 +247,19 @@ private fun Hero(plant: Plant, species: Species?, accent: Color) {
             .background(accent.copy(alpha = 0.35f)),
         contentAlignment = Alignment.BottomStart,
     ) {
+        if (heroImage != null) {
+            AsyncImage(
+                model = heroImage,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.25f)),
+            )
+        }
         Column(Modifier.padding(spacing.lg)) {
             Text(
                 plant.nickname,
