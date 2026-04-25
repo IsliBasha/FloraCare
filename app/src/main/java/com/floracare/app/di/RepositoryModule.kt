@@ -1,5 +1,6 @@
 package com.floracare.app.di
 
+import com.floracare.app.data.location.AndroidLocationProvider
 import com.floracare.app.data.ml.DiseaseClassifier
 import com.floracare.app.data.ml.SpeciesClassifier
 import com.floracare.app.data.ml.TfliteDiseaseClassifier
@@ -11,6 +12,7 @@ import com.floracare.app.data.remote.weather.WeatherRemoteDataSourceImpl
 import com.floracare.app.data.repository.PlantRepositoryImpl
 import com.floracare.app.data.repository.SpeciesRepositoryImpl
 import com.floracare.app.data.repository.WeatherRepositoryImpl
+import com.floracare.app.domain.repository.LocationProvider
 import com.floracare.app.domain.repository.PlantRepository
 import com.floracare.app.domain.repository.SpeciesRepository
 import com.floracare.app.domain.repository.WeatherRepository
@@ -32,6 +34,7 @@ abstract class RepositoryBindingModule {
     @Binds abstract fun bindWeatherRemoteDataSource(impl: WeatherRemoteDataSourceImpl): WeatherRemoteDataSource
     @Binds abstract fun bindSpeciesClassifier(impl: TfliteSpeciesClassifier): SpeciesClassifier
     @Binds abstract fun bindDiseaseClassifier(impl: TfliteDiseaseClassifier): DiseaseClassifier
+    @Binds abstract fun bindLocationProvider(impl: AndroidLocationProvider): LocationProvider
 }
 
 @Module

@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.floracare.app.data.notification.NotificationDispatcher
 import com.floracare.app.domain.model.Species
+import com.floracare.app.domain.repository.LocationProvider
 import com.floracare.app.domain.repository.PlantRepository
 import com.floracare.app.domain.repository.WeatherRepository
 import com.floracare.app.domain.usecase.ComputeNextCareTaskUseCase
@@ -34,6 +35,7 @@ class DailyCareScheduler @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val plants: PlantRepository,
     private val weather: WeatherRepository,
+    private val locationProvider: LocationProvider,
     private val computeNextTask: ComputeNextCareTaskUseCase,
     private val notifications: NotificationDispatcher,
 ) : CoroutineWorker(context, params) {
@@ -41,6 +43,7 @@ class DailyCareScheduler @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val now = Clock.System.now()
         val since = now - 14.days
+        refreshWeatherFromCurrentLocation()
         val recentWeather = weather.recentWeather(since = now - 7.days)
         val forceAll = inputData.getBoolean(KEY_FORCE_ALL, false)
 
@@ -71,6 +74,13 @@ class DailyCareScheduler @AssistedInject constructor(
             }
         }
         return Result.success()
+    }
+
+    private suspend fun refreshWeatherFromCurrentLocation() {
+        val coords = runCatching { locationProvider.current() }.getOrNull() ?: return
+        runCatching { weather.refresh(coords.lat, coords.lon) }
+        // Failures (offline, rate-limited, no permission) are absorbed by the
+        // repository: callers still see whatever cached snapshot exists.
     }
 
     companion object {
