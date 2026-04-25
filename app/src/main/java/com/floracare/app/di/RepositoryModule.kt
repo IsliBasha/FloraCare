@@ -6,6 +6,8 @@ import com.floracare.app.data.ml.TfliteDiseaseClassifier
 import com.floracare.app.data.ml.TfliteSpeciesClassifier
 import com.floracare.app.data.remote.perenual.PerenualRemoteDataSource
 import com.floracare.app.data.remote.perenual.PerenualRemoteDataSourceImpl
+import com.floracare.app.data.remote.weather.WeatherRemoteDataSource
+import com.floracare.app.data.remote.weather.WeatherRemoteDataSourceImpl
 import com.floracare.app.data.repository.PlantRepositoryImpl
 import com.floracare.app.data.repository.SpeciesRepositoryImpl
 import com.floracare.app.data.repository.WeatherRepositoryImpl
@@ -27,6 +29,7 @@ abstract class RepositoryBindingModule {
     @Binds abstract fun bindSpeciesRepository(impl: SpeciesRepositoryImpl): SpeciesRepository
     @Binds abstract fun bindWeatherRepository(impl: WeatherRepositoryImpl): WeatherRepository
     @Binds abstract fun bindPerenualRemoteDataSource(impl: PerenualRemoteDataSourceImpl): PerenualRemoteDataSource
+    @Binds abstract fun bindWeatherRemoteDataSource(impl: WeatherRemoteDataSourceImpl): WeatherRemoteDataSource
     @Binds abstract fun bindSpeciesClassifier(impl: TfliteSpeciesClassifier): SpeciesClassifier
     @Binds abstract fun bindDiseaseClassifier(impl: TfliteDiseaseClassifier): DiseaseClassifier
 }

@@ -1,6 +1,7 @@
 package com.floracare.app.di
 
 import com.floracare.app.BuildConfig
+import com.floracare.app.data.remote.WeatherApi
 import com.floracare.app.data.remote.perenual.PerenualApi
 import com.floracare.app.data.remote.perenual.PerenualAuthInterceptor
 import com.floracare.app.data.remote.perenual.RedactingHttpLogger
@@ -75,4 +76,8 @@ object NetworkModule {
     @Provides @Singleton
     fun providePerenualApi(@Named("perenualRetrofit") retrofit: Retrofit): PerenualApi =
         retrofit.create(PerenualApi::class.java)
+
+    @Provides @Singleton
+    fun provideWeatherApi(@Named("weatherRetrofit") retrofit: Retrofit): WeatherApi =
+        retrofit.create(WeatherApi::class.java)
 }

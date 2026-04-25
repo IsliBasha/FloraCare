@@ -31,4 +31,14 @@ interface PlantRepository {
 interface WeatherRepository {
     suspend fun recentWeather(since: Instant): List<WeatherSnapshot>
     suspend fun cache(snapshot: WeatherSnapshot)
+
+    /**
+     * Stale-while-revalidate refresh.
+     *
+     * - Cache `< FRESH_TTL` for the supplied coordinates → [WeatherFetchResult.Fresh] without a network call.
+     * - Otherwise calls remote; on success persists + returns [WeatherFetchResult.Fresh].
+     * - On failure with any cached snapshot → [WeatherFetchResult.Stale] carrying the cache.
+     * - On failure with no cache → [WeatherFetchResult.Offline] with `snapshot = null`.
+     */
+    suspend fun refresh(lat: Double, lon: Double): WeatherFetchResult
 }

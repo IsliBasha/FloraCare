@@ -4,16 +4,13 @@ import com.floracare.app.data.local.CareLogDao
 import com.floracare.app.data.local.CareTaskDao
 import com.floracare.app.data.local.PlantDao
 import com.floracare.app.data.local.SpeciesDao
-import com.floracare.app.data.local.WeatherDao
 import com.floracare.app.data.local.toDomain
 import com.floracare.app.data.local.toEntity
 import com.floracare.app.domain.model.CareLog
 import com.floracare.app.domain.model.CareTask
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
-import com.floracare.app.domain.model.WeatherSnapshot
 import com.floracare.app.domain.repository.PlantRepository
-import com.floracare.app.domain.repository.WeatherRepository
 import com.floracare.app.data.local.CareTaskEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -76,14 +73,4 @@ class PlantRepositoryImpl @Inject constructor(
         taskDao.markCompleted(taskId, at)
 
     override suspend fun snoozeTask(taskId: String, until: Instant) = taskDao.snooze(taskId, until)
-}
-
-@Singleton
-class WeatherRepositoryImpl @Inject constructor(
-    private val weatherDao: WeatherDao,
-) : WeatherRepository {
-    override suspend fun recentWeather(since: Instant): List<WeatherSnapshot> =
-        weatherDao.findRecent(since).map { it.toDomain() }
-
-    override suspend fun cache(snapshot: WeatherSnapshot) = weatherDao.insert(snapshot.toEntity())
 }
