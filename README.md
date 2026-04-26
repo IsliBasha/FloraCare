@@ -78,8 +78,7 @@ already in `.gitignore`.
 | Helena Petro, Serxhio Lekgegaj | **ML & Camera**                                | `data/ml`, identify & diagnose flows, CameraX pipeline              |
 | Aksel Mana | **UI & Polish**                                | `ui/theme`, `ui/components`, all `ui/feature/*` screens, widget, onboarding |
 
-`TODO(person-a):`, `TODO(person-b):`, `TODO(person-c):` markers in code make
-handoffs explicit.
+
 
 ## Testing
 
