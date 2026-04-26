@@ -75,8 +75,8 @@ already in `.gitignore`.
 | Owner     | Focus                                          | Areas                                                               |
 | --------- | ---------------------------------------------- | ------------------------------------------------------------------- |
 | Isli Basha | **Data & Intelligence**                        | `data/local`, `data/remote`, `data/worker`, `data/repository`, adaptive engine, notifications |
-| Helena Petro, Serxhio Lekgegaj | **ML & Camera**                                | `data/ml`, identify & diagnose flows, CameraX pipeline              |
-| Aksel Mana | **UI & Polish**                                | `ui/theme`, `ui/components`, all `ui/feature/*` screens, widget, onboarding |
+| Helena Petro | **ML & Camera**                                | `data/ml`, identify & diagnose flows, CameraX pipeline              |
+| Serxhio Lekgegaj | **UI & Polish**                                | `ui/theme`, `ui/components`, all `ui/feature/*` screens, widget, onboarding |
 
 
 
