@@ -1,7 +1,7 @@
 package com.floracare.app.data.remote.weather
 
 import com.floracare.app.BuildConfig
-import com.floracare.app.data.remote.OneCallResponse
+import com.floracare.app.data.remote.CurrentWeatherResponse
 import com.floracare.app.data.remote.WeatherApi
 import com.floracare.app.data.remote.perenual.RemoteResult
 import retrofit2.HttpException
@@ -15,7 +15,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * Kept as an interface so tests can swap in a deterministic fake without mocking Retrofit.
  */
 interface WeatherRemoteDataSource {
-    suspend fun fetch(lat: Double, lon: Double): RemoteResult<OneCallResponse>
+    suspend fun fetch(lat: Double, lon: Double): RemoteResult<CurrentWeatherResponse>
 }
 
 /**
@@ -32,13 +32,13 @@ class WeatherRemoteDataSourceImpl @Inject constructor(
 ) : WeatherRemoteDataSource {
     private val hasKey: Boolean = BuildConfig.OPENWEATHER_KEY.isNotBlank()
 
-    override suspend fun fetch(lat: Double, lon: Double): RemoteResult<OneCallResponse> {
+    override suspend fun fetch(lat: Double, lon: Double): RemoteResult<CurrentWeatherResponse> {
         if (!hasKey) {
             return RemoteResult.Network(IOException("OPENWEATHER_KEY not configured"))
         }
         return try {
             RemoteResult.Success(
-                api.oneCall(lat = lat, lon = lon, key = BuildConfig.OPENWEATHER_KEY),
+                api.current(lat = lat, lon = lon, key = BuildConfig.OPENWEATHER_KEY),
             )
         } catch (e: CancellationException) {
             throw e

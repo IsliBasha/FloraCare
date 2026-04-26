@@ -1,8 +1,8 @@
 package com.floracare.app.data.repository
 
 import com.floracare.app.data.local.toEntity
-import com.floracare.app.data.remote.CurrentDto
-import com.floracare.app.data.remote.OneCallResponse
+import com.floracare.app.data.remote.CurrentWeatherResponse
+import com.floracare.app.data.remote.WeatherMainDto
 import com.floracare.app.data.remote.perenual.RemoteResult
 import com.floracare.app.domain.model.WeatherSnapshot
 import com.floracare.app.domain.repository.WeatherFetchResult
@@ -43,13 +43,10 @@ class WeatherRepositoryImplTest {
     )
 
     private fun successResponse(currentDt: Long = 1_700_000_000L) = RemoteResult.Success(
-        OneCallResponse(
-            current = CurrentDto(
-                dt = currentDt,
-                temp = 22.5,
-                humidity = 60,
-                uvi = 4.5,
-            ),
+        CurrentWeatherResponse(
+            dt = currentDt,
+            main = WeatherMainDto(temp = 22.5, humidity = 60),
+            rain = emptyMap(),
         ),
     )
 
