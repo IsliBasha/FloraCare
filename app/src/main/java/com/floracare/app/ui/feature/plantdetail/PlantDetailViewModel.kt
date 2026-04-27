@@ -11,6 +11,7 @@ import com.floracare.app.domain.model.LocationTag
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
 import com.floracare.app.domain.repository.PlantRepository
+import com.floracare.app.domain.usecase.ReenrichPlantSpeciesUseCase
 import androidx.navigation.toRoute
 import com.floracare.app.ui.navigation.FloraRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -47,10 +49,21 @@ data class UpcomingTask(
 class PlantDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repo: PlantRepository,
+    private val reenrich: ReenrichPlantSpeciesUseCase,
 ) : ViewModel() {
 
     private val plantId: String =
         savedStateHandle.toRoute<FloraRoute.PlantDetail>().plantId
+
+    init {
+        // Fire-and-forget — succeeds silently for already-enriched plants
+        // and absorbs offline / not-found / lookup errors without surfacing
+        // them to the UI. The next combine emission picks up the upgraded
+        // species automatically once the plant.speciesId is rewritten.
+        viewModelScope.launch {
+            runCatching { reenrich(plantId) }
+        }
+    }
 
     val state: StateFlow<PlantDetailUiState> =
         combine(
