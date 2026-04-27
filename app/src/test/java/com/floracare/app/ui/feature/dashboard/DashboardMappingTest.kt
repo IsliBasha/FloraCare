@@ -8,6 +8,7 @@ import com.floracare.app.domain.model.LocationTag
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
 import com.floracare.app.domain.model.Toxicity
+import com.floracare.app.domain.model.WeatherSnapshot
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -19,6 +20,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class DashboardMappingTest {
 
@@ -197,4 +200,92 @@ class DashboardMappingTest {
         soilMoistureNote = null,
         userNote = null,
     )
+
+    private fun weather(id: String, recordedAt: Instant, tempC: Float = 20f) = WeatherSnapshot(
+        id = id,
+        lat = 41.32,
+        lon = 19.82,
+        recordedAt = recordedAt,
+        tempC = tempC,
+        humidityPct = 60f,
+        rainMm = 0f,
+        uvIndex = 0f,
+    )
+
+    @Test
+    fun `currentWeather is null when no snapshots are supplied`() {
+        val snap = toDashboard(
+            logs = emptyList(),
+            plants = emptyList(),
+            species = emptyList(),
+            weather = emptyList(),
+            now = now,
+            tz = tz,
+        )
+        assertNull(snap.currentWeather)
+    }
+
+    @Test
+    fun `currentWeather picks the most recent snapshot regardless of input order`() {
+        val older = weather("w-old", recordedAt = now - 4.hours, tempC = 17f)
+        val newest = weather("w-new", recordedAt = now - 30.minutes, tempC = 22f)
+        val mid = weather("w-mid", recordedAt = now - 2.hours, tempC = 19f)
+
+        val snap = toDashboard(
+            logs = emptyList(),
+            plants = emptyList(),
+            species = emptyList(),
+            weather = listOf(older, newest, mid),
+            now = now,
+            tz = tz,
+        )
+
+        assertNotNull(snap.currentWeather)
+        assertEquals("w-new", snap.currentWeather?.id)
+        assertEquals(22f, snap.currentWeather?.tempC)
+    }
+
+    @Test
+    fun `currentWeather is null when the newest snapshot is older than the freshness window`() {
+        val ancient = weather("w-ancient", recordedAt = now - 25.hours, tempC = 17f)
+        val snap = toDashboard(
+            logs = emptyList(),
+            plants = emptyList(),
+            species = emptyList(),
+            weather = listOf(ancient),
+            now = now,
+            tz = tz,
+        )
+        assertNull(snap.currentWeather)
+    }
+
+    @Test
+    fun `formatWeatherAge produces expected human-friendly strings`() {
+        assertEquals("just now", formatWeatherAge(now, now))
+        assertEquals("just now", formatWeatherAge(now, now - 30.seconds))
+        assertEquals("5m ago", formatWeatherAge(now, now - 5.minutes))
+        assertEquals("59m ago", formatWeatherAge(now, now - 59.minutes))
+        assertEquals("1h ago", formatWeatherAge(now, now - 60.minutes))
+        assertEquals("3h ago", formatWeatherAge(now, now - 3.hours))
+        assertEquals("23h ago", formatWeatherAge(now, now - 23.hours))
+        assertEquals("2d ago", formatWeatherAge(now, now - 48.hours))
+        // future timestamps clamp to "just now" rather than negative
+        assertEquals("just now", formatWeatherAge(now, now + 5.minutes))
+    }
+
+    @Test
+    fun `currentWeather returns the snapshot when it sits exactly at the freshness boundary`() {
+        val edge = weather("w-edge", recordedAt = now - 24.hours, tempC = 12f)
+        val snap = toDashboard(
+            logs = emptyList(),
+            plants = emptyList(),
+            species = emptyList(),
+            weather = listOf(edge),
+            now = now,
+            tz = tz,
+        )
+        assertNotNull(snap.currentWeather)
+        assertEquals("w-edge", snap.currentWeather?.id)
+    }
+
 }

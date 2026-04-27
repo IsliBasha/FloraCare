@@ -4,7 +4,9 @@ import com.floracare.app.domain.model.CareLog
 import com.floracare.app.domain.model.CareTaskType
 import com.floracare.app.domain.model.LocationTag
 import com.floracare.app.domain.model.Plant
+import com.floracare.app.domain.model.WeatherSnapshot
 import com.floracare.app.test.FakePlantRepository
+import com.floracare.app.test.FakeWeatherRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -55,7 +57,8 @@ class DashboardViewModelTest {
     @Test
     fun `initial emission is Success with empty snapshot when repo is empty`() = runTest(dispatcher) {
         val repo = FakePlantRepository()
-        val vm = DashboardViewModel(repo)
+        val weather = FakeWeatherRepository()
+        val vm = DashboardViewModel(repo, weather)
 
         keepSubscribed(vm) {
             val state = vm.state.value
@@ -64,14 +67,16 @@ class DashboardViewModelTest {
             assertEquals(DASHBOARD_WINDOW_DAYS, snap.dailyWaterCounts.size)
             assertEquals(0, snap.totalWatersLast30d)
             assertEquals(0, snap.currentStreakDays)
+            assertTrue(snap.currentWeather == null)
         }
     }
 
     @Test
     fun `adding a water log live-updates totals and plant of the month`() = runTest(dispatcher) {
         val repo = FakePlantRepository()
+        val weather = FakeWeatherRepository()
         repo.plants.value = listOf(plant("p1", "Mona"))
-        val vm = DashboardViewModel(repo)
+        val vm = DashboardViewModel(repo, weather)
 
         keepSubscribed(vm) {
             val before = (vm.state.value as DashboardUiState.Success).snapshot
@@ -87,6 +92,36 @@ class DashboardViewModelTest {
             assertEquals(2, after.totalWatersLast30d)
             assertEquals("p1", after.plantOfTheMonth?.plantId)
             assertEquals(2, after.plantOfTheMonth?.waterCount)
+        }
+    }
+
+    @Test
+    fun `weather snapshot from repository surfaces in the dashboard state`() = runTest(dispatcher) {
+        val repo = FakePlantRepository()
+        val weather = FakeWeatherRepository()
+        val vm = DashboardViewModel(repo, weather)
+
+        keepSubscribed(vm) {
+            val before = (vm.state.value as DashboardUiState.Success).snapshot
+            assertTrue(before.currentWeather == null)
+
+            val now = Clock.System.now()
+            weather.snapshots.value = listOf(
+                WeatherSnapshot(
+                    id = "wx-now",
+                    lat = 41.32,
+                    lon = 19.82,
+                    recordedAt = now,
+                    tempC = 19.5f,
+                    humidityPct = 64f,
+                    rainMm = 0f,
+                    uvIndex = 0f,
+                ),
+            )
+
+            val after = (vm.state.value as DashboardUiState.Success).snapshot
+            assertEquals("wx-now", after.currentWeather?.id)
+            assertEquals(19.5f, after.currentWeather?.tempC)
         }
     }
 

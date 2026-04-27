@@ -102,6 +102,9 @@ interface WeatherDao {
     @Query("SELECT * FROM weather_snapshot WHERE recordedAt >= :since ORDER BY recordedAt DESC")
     suspend fun findRecent(since: Instant): List<WeatherSnapshotEntity>
 
+    @Query("SELECT * FROM weather_snapshot WHERE recordedAt >= :since ORDER BY recordedAt DESC")
+    fun observeRecent(since: Instant): Flow<List<WeatherSnapshotEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(snapshot: WeatherSnapshotEntity)
 }

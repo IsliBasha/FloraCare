@@ -30,6 +30,7 @@ interface PlantRepository {
 
 interface WeatherRepository {
     suspend fun recentWeather(since: Instant): List<WeatherSnapshot>
+    fun observeRecent(since: Instant): Flow<List<WeatherSnapshot>>
     suspend fun cache(snapshot: WeatherSnapshot)
 
     /**

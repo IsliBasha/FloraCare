@@ -4,6 +4,7 @@ import com.floracare.app.domain.model.CareLog
 import com.floracare.app.domain.model.CareTaskType
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
+import com.floracare.app.domain.model.WeatherSnapshot
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -11,9 +12,17 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 
 /** Size of the dashboard trend window, in days (inclusive of today). */
 const val DASHBOARD_WINDOW_DAYS: Int = 30
+
+/**
+ * Snapshots older than this are considered stale and not surfaced as
+ * "current weather" on the dashboard.
+ */
+val DASHBOARD_WEATHER_FRESHNESS: Duration = 24.hours
 
 data class DailyCount(val date: LocalDate, val count: Int)
 
@@ -29,6 +38,7 @@ data class DashboardSnapshot(
     val currentStreakDays: Int,
     val totalWatersLast30d: Int,
     val plantOfTheMonth: PlantOfTheMonth?,
+    val currentWeather: WeatherSnapshot?,
 )
 
 /**
@@ -39,6 +49,7 @@ fun toDashboard(
     logs: List<CareLog>,
     plants: List<Plant>,
     species: List<Species>,
+    weather: List<WeatherSnapshot> = emptyList(),
     now: Instant,
     tz: TimeZone = TimeZone.currentSystemDefault(),
 ): DashboardSnapshot {
@@ -66,11 +77,16 @@ fun toDashboard(
         species = species,
     )
 
+    val currentWeather = weather
+        .maxByOrNull { it.recordedAt }
+        ?.takeIf { now - it.recordedAt <= DASHBOARD_WEATHER_FRESHNESS }
+
     return DashboardSnapshot(
         dailyWaterCounts = dailyWaterCounts,
         currentStreakDays = currentStreakDays,
         totalWatersLast30d = totalWatersLast30d,
         plantOfTheMonth = plantOfTheMonth,
+        currentWeather = currentWeather,
     )
 }
 
@@ -85,6 +101,20 @@ private fun countStreakEndingToday(
         cursor = cursor.minus(DatePeriod(days = 1))
     }
     return streak
+}
+
+/**
+ * Tiny human-friendly age formatter for the dashboard weather tile.
+ * Pure function — no clock, no locale-specific resources.
+ */
+fun formatWeatherAge(now: Instant, recordedAt: Instant): String {
+    val deltaMinutes = ((now - recordedAt).inWholeSeconds / 60).coerceAtLeast(0)
+    return when {
+        deltaMinutes < 1L -> "just now"
+        deltaMinutes < 60L -> "${deltaMinutes}m ago"
+        deltaMinutes < 24L * 60L -> "${deltaMinutes / 60L}h ago"
+        else -> "${deltaMinutes / (24L * 60L)}d ago"
+    }
 }
 
 private fun pickPlantOfTheMonth(

@@ -10,6 +10,8 @@ import com.floracare.app.domain.model.WeatherSnapshot
 import com.floracare.app.domain.repository.WeatherFetchResult
 import com.floracare.app.domain.repository.WeatherRepository
 import com.floracare.app.domain.repository.WeatherStaleReason
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import javax.inject.Inject
@@ -33,6 +35,9 @@ class WeatherRepositoryImpl @Inject constructor(
 
     override suspend fun recentWeather(since: Instant): List<WeatherSnapshot> =
         weatherDao.findRecent(since).map { it.toDomain() }
+
+    override fun observeRecent(since: Instant): Flow<List<WeatherSnapshot>> =
+        weatherDao.observeRecent(since).map { rows -> rows.map { it.toDomain() } }
 
     override suspend fun cache(snapshot: WeatherSnapshot) =
         weatherDao.insert(snapshot.toEntity())

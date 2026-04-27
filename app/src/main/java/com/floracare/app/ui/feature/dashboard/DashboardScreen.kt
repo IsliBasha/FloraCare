@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Thermostat
+import androidx.compose.material.icons.outlined.Umbrella
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,8 +44,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.floracare.app.domain.model.WeatherSnapshot
 import com.floracare.app.ui.theme.LocalFloraAccents
 import com.floracare.app.ui.theme.LocalFloraSpacing
+import kotlinx.datetime.Clock
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,12 +135,111 @@ private fun DashboardContent(
             .padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
+        WeatherCard(weather = snapshot.currentWeather)
         StreakHeroCard(
             streakDays = snapshot.currentStreakDays,
             totalWatersLast30d = snapshot.totalWatersLast30d,
         )
         WateringTrendCard(dailyCounts = snapshot.dailyWaterCounts)
         PlantOfTheMonthCard(potm = snapshot.plantOfTheMonth)
+    }
+}
+
+@Composable
+private fun WeatherCard(weather: WeatherSnapshot?) {
+    val accents = LocalFloraAccents.current
+    val spacing = LocalFloraSpacing.current
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(spacing.lg),
+        ) {
+            Text(
+                "Current weather",
+                style = MaterialTheme.typography.labelLarge,
+                color = accents.terracotta,
+            )
+            Spacer(Modifier.height(spacing.sm))
+            if (weather == null) {
+                Text(
+                    "No recent reading. The daily run will fetch the next one — make sure location is granted.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Surface(
+                        color = accents.sage.copy(alpha = 0.22f),
+                        shape = CircleShape,
+                        modifier = Modifier.height(64.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .height(64.dp)
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Outlined.Thermostat,
+                                contentDescription = null,
+                                tint = accents.sage,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.padding(horizontal = spacing.sm))
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            "${weather.tempC.roundToInt()}°C",
+                            style = MaterialTheme.typography.displayLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Outlined.WaterDrop,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.height(14.dp),
+                            )
+                            Text(
+                                "${weather.humidityPct.roundToInt()}% humidity",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            if (weather.rainMm > 0f) {
+                                Spacer(Modifier.padding(horizontal = 4.dp))
+                                Icon(
+                                    Icons.Outlined.Umbrella,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.height(14.dp),
+                                )
+                                Text(
+                                    "${"%.1f".format(weather.rainMm)} mm",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Updated ${formatWeatherAge(Clock.System.now(), weather.recordedAt)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = accents.terracotta,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
