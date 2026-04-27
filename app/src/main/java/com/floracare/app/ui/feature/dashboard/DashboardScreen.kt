@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.floracare.app.domain.model.TemperatureUnit
 import com.floracare.app.domain.model.WeatherSnapshot
 import com.floracare.app.ui.theme.LocalFloraAccents
 import com.floracare.app.ui.theme.LocalFloraSpacing
@@ -111,6 +112,7 @@ fun DashboardScreen(
 
             is DashboardUiState.Success -> DashboardContent(
                 snapshot = s.snapshot,
+                temperatureUnit = s.temperatureUnit,
                 contentPadding = PaddingValues(
                     start = spacing.md,
                     end = spacing.md,
@@ -125,6 +127,7 @@ fun DashboardScreen(
 @Composable
 private fun DashboardContent(
     snapshot: DashboardSnapshot,
+    temperatureUnit: TemperatureUnit,
     contentPadding: PaddingValues,
 ) {
     val spacing = LocalFloraSpacing.current
@@ -135,7 +138,7 @@ private fun DashboardContent(
             .padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
-        WeatherCard(weather = snapshot.currentWeather)
+        WeatherCard(weather = snapshot.currentWeather, temperatureUnit = temperatureUnit)
         StreakHeroCard(
             streakDays = snapshot.currentStreakDays,
             totalWatersLast30d = snapshot.totalWatersLast30d,
@@ -146,7 +149,7 @@ private fun DashboardContent(
 }
 
 @Composable
-private fun WeatherCard(weather: WeatherSnapshot?) {
+private fun WeatherCard(weather: WeatherSnapshot?, temperatureUnit: TemperatureUnit) {
     val accents = LocalFloraAccents.current
     val spacing = LocalFloraSpacing.current
     Card(
@@ -198,7 +201,7 @@ private fun WeatherCard(weather: WeatherSnapshot?) {
                     Spacer(Modifier.padding(horizontal = spacing.sm))
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            "${weather.tempC.roundToInt()}°C",
+                            temperatureUnit.format(weather.tempC),
                             style = MaterialTheme.typography.displayLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )

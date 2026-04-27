@@ -12,11 +12,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.floracare.app.MainActivity
 import com.floracare.app.R
+import com.floracare.app.data.prefs.UserPrefs
 import com.floracare.app.data.worker.NotificationActionReceiver
 import com.floracare.app.domain.model.CareTask
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,6 +33,7 @@ import javax.inject.Singleton
 @Singleton
 class NotificationDispatcher @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val userPrefs: UserPrefs,
 ) {
 
     fun post(task: CareTask, plant: Plant, species: Species?) {
@@ -112,12 +116,23 @@ class NotificationDispatcher @Inject constructor(
         }
 
     private fun canPost(): Boolean {
+        if (!userPrefsAllow()) return false
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
         return ActivityCompat.checkSelfPermission(
             context,
             Manifest.permission.POST_NOTIFICATIONS,
         ) == PackageManager.PERMISSION_GRANTED
     }
+
+    /**
+     * Reads the current user-side master toggle. Bridges a Flow into a
+     * synchronous read because [post] is called from a non-suspend
+     * BroadcastReceiver path. The DataStore read is in-memory after first
+     * load, so the runBlocking cost is sub-millisecond.
+     */
+    private fun userPrefsAllow(): Boolean = runCatching {
+        runBlocking { userPrefs.appPreferences().first().notificationsEnabled }
+    }.getOrElse { true }
 
     companion object {
         /** Intent extra read by [MainActivity] to deep-link into plant detail. */

@@ -3,12 +3,15 @@ package com.floracare.app.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.floracare.app.data.prefs.UserPrefs
+import com.floracare.app.domain.model.AppPreferences
 import com.floracare.app.ui.navigation.FloraRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,6 +27,17 @@ class AppStartViewModel @Inject constructor(
 
     private val _startDestination = MutableStateFlow<FloraRoute?>(null)
     val startDestination: StateFlow<FloraRoute?> = _startDestination.asStateFlow()
+
+    /**
+     * Live app preferences — drives the theme switch in MainActivity so a
+     * theme change in Settings repaints without an app restart.
+     */
+    val appPreferences: StateFlow<AppPreferences> =
+        userPrefs.appPreferences().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = AppPreferences(),
+        )
 
     init {
         viewModelScope.launch {

@@ -6,6 +6,7 @@ import com.floracare.app.domain.model.LocationTag
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.WeatherSnapshot
 import com.floracare.app.test.FakePlantRepository
+import com.floracare.app.test.FakeUserPrefs
 import com.floracare.app.test.FakeWeatherRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,7 +59,7 @@ class DashboardViewModelTest {
     fun `initial emission is Success with empty snapshot when repo is empty`() = runTest(dispatcher) {
         val repo = FakePlantRepository()
         val weather = FakeWeatherRepository()
-        val vm = DashboardViewModel(repo, weather)
+        val vm = DashboardViewModel(repo, weather, FakeUserPrefs())
 
         keepSubscribed(vm) {
             val state = vm.state.value
@@ -76,7 +77,7 @@ class DashboardViewModelTest {
         val repo = FakePlantRepository()
         val weather = FakeWeatherRepository()
         repo.plants.value = listOf(plant("p1", "Mona"))
-        val vm = DashboardViewModel(repo, weather)
+        val vm = DashboardViewModel(repo, weather, FakeUserPrefs())
 
         keepSubscribed(vm) {
             val before = (vm.state.value as DashboardUiState.Success).snapshot
@@ -99,7 +100,7 @@ class DashboardViewModelTest {
     fun `weather snapshot from repository surfaces in the dashboard state`() = runTest(dispatcher) {
         val repo = FakePlantRepository()
         val weather = FakeWeatherRepository()
-        val vm = DashboardViewModel(repo, weather)
+        val vm = DashboardViewModel(repo, weather, FakeUserPrefs())
 
         keepSubscribed(vm) {
             val before = (vm.state.value as DashboardUiState.Success).snapshot

@@ -4,13 +4,16 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.floracare.app.BuildConfig
 import com.floracare.app.data.prefs.UserPrefs
 import com.floracare.app.data.prefs.UserPrefsDataStore
+import com.floracare.app.ui.feature.settings.SettingsViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 /**
@@ -35,4 +38,8 @@ object UserPrefsModule {
     @Provides @Singleton
     fun provideUserPrefs(dataStore: DataStore<Preferences>): UserPrefs =
         UserPrefsDataStore(dataStore)
+
+    @Provides @Singleton
+    @Named(SettingsViewModel.QUALIFIER_APP_VERSION)
+    fun provideAppVersion(): String = BuildConfig.VERSION_NAME
 }
