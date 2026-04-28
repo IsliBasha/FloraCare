@@ -10,6 +10,8 @@ import com.floracare.app.domain.repository.LocationProvider
 import com.floracare.app.domain.repository.PlantRepository
 import com.floracare.app.domain.repository.WeatherRepository
 import com.floracare.app.domain.usecase.ComputeNextCareTaskUseCase
+import androidx.glance.appwidget.updateAll
+import com.floracare.app.widget.TodayTasksWidget
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -73,7 +75,18 @@ class DailyCareScheduler @AssistedInject constructor(
                 notifications.post(task = task, plant = plant, species = species)
             }
         }
+        refreshWidgetSafely()
         return Result.success()
+    }
+
+    private suspend fun refreshWidgetSafely() {
+        try {
+            TodayTasksWidget().updateAll(applicationContext)
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // widget refresh is best-effort; never fail the worker over it
+        }
     }
 
     private suspend fun refreshWeatherFromCurrentLocation() {

@@ -8,6 +8,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.floracare.app.domain.repository.PlantRepository
+import androidx.glance.appwidget.updateAll
+import com.floracare.app.widget.TodayTasksWidget
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.datetime.Clock
@@ -31,8 +33,21 @@ class CareActionWorker @AssistedInject constructor(
         val action = inputData.getString(KEY_ACTION) ?: return Result.failure()
         val now = Clock.System.now()
         return when (applyCareAction(plants, taskId, action, now)) {
-            CareActionOutcome.Success -> Result.success()
+            CareActionOutcome.Success -> {
+                refreshWidgetSafely()
+                Result.success()
+            }
             CareActionOutcome.UnknownAction -> Result.failure()
+        }
+    }
+
+    private suspend fun refreshWidgetSafely() {
+        try {
+            TodayTasksWidget().updateAll(applicationContext)
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // widget refresh is best-effort; never fail the worker over it
         }
     }
 
