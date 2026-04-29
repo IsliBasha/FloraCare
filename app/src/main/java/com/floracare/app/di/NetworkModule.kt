@@ -37,7 +37,10 @@ object NetworkModule {
     }
 
     @Provides @Singleton
-    fun provideMoshi(): Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    fun provideMoshi(): Moshi = Moshi.Builder()
+        .add(com.floracare.app.data.remote.perenual.LenientStringListAdapterFactory())
+        .add(KotlinJsonAdapterFactory())
+        .build()
 
     @Provides @Singleton
     @Named("weatherRetrofit")

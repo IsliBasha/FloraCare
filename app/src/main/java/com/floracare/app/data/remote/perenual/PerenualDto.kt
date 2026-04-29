@@ -12,9 +12,9 @@ data class SpeciesSearchResponse(
 data class SpeciesSearchItem(
     @Json(name = "id") val id: Long,
     @Json(name = "common_name") val commonName: String?,
-    @Json(name = "scientific_name") val scientificName: List<String> = emptyList(),
+    @Json(name = "scientific_name") @LenientStringList val scientificName: List<String> = emptyList(),
     @Json(name = "watering") val watering: String?,
-    @Json(name = "sunlight") val sunlight: List<String> = emptyList(),
+    @Json(name = "sunlight") @LenientStringList val sunlight: List<String> = emptyList(),
     @Json(name = "default_image") val image: PerenualImage?,
 )
 
@@ -22,11 +22,11 @@ data class SpeciesSearchItem(
 data class SpeciesDetailsResponse(
     @Json(name = "id") val id: Long,
     @Json(name = "common_name") val commonName: String?,
-    @Json(name = "scientific_name") val scientificName: List<String> = emptyList(),
+    @Json(name = "scientific_name") @LenientStringList val scientificName: List<String> = emptyList(),
     @Json(name = "family") val family: String?,
     @Json(name = "genus") val genus: String?,
     @Json(name = "watering") val watering: String?,
-    @Json(name = "sunlight") val sunlight: List<String> = emptyList(),
+    @Json(name = "sunlight") @LenientStringList val sunlight: List<String> = emptyList(),
     @Json(name = "hardiness") val hardiness: Hardiness?,
     @Json(name = "poisonous_to_humans") val poisonousToHumans: Int?,
     @Json(name = "poisonous_to_pets") val poisonousToPets: Int?,
