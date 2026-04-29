@@ -26,6 +26,7 @@ class FakePlantRepository : PlantRepository {
     val loggedCare = mutableListOf<CareLog>()
     val completedTasks = mutableListOf<Pair<String, Instant>>()
     val snoozedTasks = mutableListOf<Pair<String, Instant>>()
+    val archivedCalls = mutableListOf<Pair<String, Boolean>>()
 
     override fun observePlants(): Flow<List<Plant>> = plants
 
@@ -35,6 +36,11 @@ class FakePlantRepository : PlantRepository {
     override suspend fun upsert(plant: Plant) {
         upsertedPlants += plant
         plants.value = plants.value.filterNot { it.id == plant.id } + plant
+    }
+
+    override suspend fun archivePlant(id: String, archived: Boolean) {
+        archivedCalls += id to archived
+        plants.value = plants.value.map { if (it.id == id) it.copy(archived = archived) else it }
     }
 
     override suspend fun findSpecies(id: String): Species? =

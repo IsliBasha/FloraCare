@@ -178,6 +178,7 @@ class PlantListViewModelTest {
         override fun observePlants(): Flow<List<Plant>> = plants
         override suspend fun findPlant(id: String): Plant? = plants.value.firstOrNull { it.id == id }
         override suspend fun upsert(plant: Plant) = Unit
+        override suspend fun archivePlant(id: String, archived: Boolean) = Unit
         override suspend fun findSpecies(id: String): Species? =
             species.value.firstOrNull { it.id == id }
 

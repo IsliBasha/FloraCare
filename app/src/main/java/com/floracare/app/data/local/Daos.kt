@@ -21,6 +21,9 @@ interface PlantDao {
 
     @Update suspend fun update(plant: PlantEntity)
 
+    @Query("UPDATE plant SET archived = :archived WHERE id = :id")
+    suspend fun setArchived(id: String, archived: Boolean)
+
     @Query("SELECT COUNT(*) FROM plant")
     suspend fun count(): Int
 }

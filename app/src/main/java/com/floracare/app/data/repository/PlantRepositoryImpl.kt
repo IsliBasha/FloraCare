@@ -33,6 +33,9 @@ class PlantRepositoryImpl @Inject constructor(
 
     override suspend fun upsert(plant: Plant) = plantDao.upsert(plant.toEntity())
 
+    override suspend fun archivePlant(id: String, archived: Boolean) =
+        plantDao.setArchived(id, archived)
+
     override suspend fun findSpecies(id: String): Species? = speciesDao.findById(id)?.toDomain()
 
     override suspend fun findSpeciesByScientificName(scientificName: String): Species? =

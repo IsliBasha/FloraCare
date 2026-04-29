@@ -81,6 +81,7 @@ class CareActionWorkerTest {
         override fun observePlants(): Flow<List<Plant>> = emptyFlow()
         override suspend fun findPlant(id: String): Plant? = null
         override suspend fun upsert(plant: Plant) = Unit
+        override suspend fun archivePlant(id: String, archived: Boolean) = Unit
         override suspend fun findSpecies(id: String): Species? = null
         override suspend fun findSpeciesByScientificName(scientificName: String): Species? = null
         override suspend fun upsertSpecies(species: Species) = Unit

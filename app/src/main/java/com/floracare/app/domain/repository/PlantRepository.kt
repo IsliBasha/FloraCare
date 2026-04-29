@@ -12,6 +12,7 @@ interface PlantRepository {
     fun observePlants(): Flow<List<Plant>>
     suspend fun findPlant(id: String): Plant?
     suspend fun upsert(plant: Plant)
+    suspend fun archivePlant(id: String, archived: Boolean = true)
 
     suspend fun findSpecies(id: String): Species?
     suspend fun findSpeciesByScientificName(scientificName: String): Species?

@@ -10,6 +10,7 @@ import com.floracare.app.ui.feature.addplant.AddPlantManualScreen
 import com.floracare.app.ui.feature.addplant.AddPlantScreen
 import com.floracare.app.ui.feature.dashboard.DashboardScreen
 import com.floracare.app.ui.feature.diagnose.DiagnoseScreen
+import com.floracare.app.ui.feature.editplant.EditPlantScreen
 import com.floracare.app.ui.feature.identify.IdentifyScreen
 import com.floracare.app.ui.feature.journal.JournalScreen
 import com.floracare.app.ui.feature.onboarding.OnboardingScreen
@@ -59,6 +60,18 @@ fun FloraCareNavHost(
                 onBack = { navController.popBackStack() },
                 onDiagnose = { navController.navigate(FloraRoute.Diagnose(route.plantId)) },
                 onJournal = { navController.navigate(FloraRoute.Journal(route.plantId)) },
+                onEdit = { navController.navigate(FloraRoute.EditPlant(route.plantId)) },
+            )
+        }
+        composable<FloraRoute.EditPlant> {
+            EditPlantScreen(
+                onBack = { navController.popBackStack() },
+                onSaved = {
+                    navController.popBackStack(
+                        route = FloraRoute.PlantList,
+                        inclusive = false,
+                    )
+                },
             )
         }
         composable<FloraRoute.AddPlant> {
