@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.BarChart
@@ -28,19 +27,19 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil3.compose.AsyncImage
 import com.floracare.app.ui.theme.LocalFloraAccents
 import com.floracare.app.ui.theme.LocalFloraSpacing
 
@@ -50,6 +49,7 @@ data class PlantCardUi(
     val speciesName: String,
     val nextTaskLabel: String,
     val accent: Color,
+    val photoUri: String? = null,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -154,16 +154,16 @@ private fun PlantCard(plant: PlantCardUi, onClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .background(plant.accent.copy(alpha = 0.25f)),
-            contentAlignment = Alignment.BottomStart,
+                .background(plant.accent.copy(alpha = 0.18f)),
         ) {
-            Surface(
-                color = plant.accent,
-                shape = CircleShape,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .height(14.dp),
-            ) { Box(Modifier.padding(horizontal = 10.dp, vertical = 1.dp)) }
+            if (plant.photoUri != null) {
+                AsyncImage(
+                    model = plant.photoUri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
         Column(Modifier.padding(14.dp)) {
             Text(

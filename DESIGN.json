@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-04-29T00:00:00Z",
+  "title": "Design System: FloraCare",
+  "extensions": {
+    "colorMeta": {
+      "forest-deep": {
+        "role": "primary",
+        "displayName": "Forest Deep",
+        "canonical": "oklch(32% 0.04 155)",
+        "tonalRamp": [
+          "oklch(15% 0.03 155)",
+          "oklch(22% 0.035 155)",
+          "oklch(28% 0.04 155)",
+          "oklch(32% 0.04 155)",
+          "oklch(45% 0.045 155)",
+          "oklch(60% 0.05 155)",
+          "oklch(78% 0.04 155)",
+          "oklch(92% 0.02 155)"
+        ]
+      },
+      "paper-cream": {
+        "role": "neutral",
+        "displayName": "Paper Cream",
+        "canonical": "oklch(95% 0.02 85)",
+        "tonalRamp": [
+          "oklch(20% 0.01 85)",
+          "oklch(35% 0.012 85)",
+          "oklch(50% 0.015 85)",
+          "oklch(65% 0.018 85)",
+          "oklch(78% 0.02 85)",
+          "oklch(88% 0.022 85)",
+          "oklch(95% 0.02 85)",
+          "oklch(98% 0.01 85)"
+        ]
+      },
+      "paper-cream-dim": {
+        "role": "neutral",
+        "displayName": "Paper Cream Dim",
+        "canonical": "oklch(90% 0.025 85)",
+        "tonalRamp": [
+          "oklch(22% 0.012 85)",
+          "oklch(38% 0.015 85)",
+          "oklch(55% 0.018 85)",
+          "oklch(70% 0.022 85)",
+          "oklch(82% 0.024 85)",
+          "oklch(90% 0.025 85)",
+          "oklch(94% 0.02 85)",
+          "oklch(97% 0.012 85)"
+        ]
+      },
+      "terracotta": {
+        "role": "tertiary",
+        "displayName": "Bookbinder Terracotta",
+        "canonical": "oklch(60% 0.13 45)",
+        "tonalRamp": [
+          "oklch(25% 0.06 45)",
+          "oklch(36% 0.09 45)",
+          "oklch(46% 0.11 45)",
+          "oklch(55% 0.125 45)",
+          "oklch(60% 0.13 45)",
+          "oklch(72% 0.11 45)",
+          "oklch(84% 0.08 45)",
+          "oklch(94% 0.04 45)"
+        ]
+      },
+      "sage-muted": {
+        "role": "secondary",
+        "displayName": "Sage Muted",
+        "canonical": "oklch(72% 0.04 145)",
+        "tonalRamp": [
+          "oklch(25% 0.025 145)",
+          "oklch(38% 0.03 145)",
+          "oklch(50% 0.035 145)",
+          "oklch(60% 0.04 145)",
+          "oklch(72% 0.04 145)",
+          "oklch(82% 0.03 145)",
+          "oklch(90% 0.022 145)",
+          "oklch(96% 0.01 145)"
+        ]
+      },
+      "sage-deep": {
+        "role": "secondary",
+        "displayName": "Sage Deep",
+        "canonical": "oklch(60% 0.05 145)",
+        "tonalRamp": [
+          "oklch(20% 0.03 145)",
+          "oklch(32% 0.04 145)",
+          "oklch(46% 0.045 145)",
+          "oklch(60% 0.05 145)",
+          "oklch(72% 0.045 145)",
+          "oklch(84% 0.035 145)",
+          "oklch(92% 0.02 145)",
+          "oklch(97% 0.01 145)"
+        ]
+      },
+      "charcoal-dark": {
+        "role": "neutral",
+        "displayName": "Charcoal Dark",
+        "canonical": "oklch(18% 0.005 145)",
+        "tonalRamp": [
+          "oklch(10% 0.003 145)",
+          "oklch(14% 0.004 145)",
+          "oklch(18% 0.005 145)",
+          "oklch(28% 0.008 145)",
+          "oklch(42% 0.01 145)",
+          "oklch(60% 0.012 145)",
+          "oklch(80% 0.008 145)",
+          "oklch(95% 0.004 145)"
+        ]
+      },
+      "ink-near-black": {
+        "role": "neutral",
+        "displayName": "Ink Near-Black",
+        "canonical": "oklch(12% 0.005 145)",
+        "tonalRamp": [
+          "oklch(8% 0.003 145)",
+          "oklch(12% 0.005 145)",
+          "oklch(20% 0.008 145)",
+          "oklch(32% 0.01 145)",
+          "oklch(48% 0.012 145)",
+          "oklch(65% 0.01 145)",
+          "oklch(82% 0.008 145)",
+          "oklch(95% 0.004 145)"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Ink Soft",
+        "canonical": "oklch(38% 0.005 145)",
+        "tonalRamp": [
+          "oklch(15% 0.003 145)",
+          "oklch(25% 0.005 145)",
+          "oklch(38% 0.005 145)",
+          "oklch(52% 0.006 145)",
+          "oklch(65% 0.006 145)",
+          "oklch(78% 0.005 145)",
+          "oklch(88% 0.004 145)",
+          "oklch(96% 0.002 145)"
+        ]
+      },
+      "warning-amber": {
+        "role": "warning",
+        "displayName": "Warning Amber",
+        "canonical": "oklch(72% 0.13 75)",
+        "tonalRamp": [
+          "oklch(28% 0.06 75)",
+          "oklch(42% 0.09 75)",
+          "oklch(56% 0.12 75)",
+          "oklch(68% 0.13 75)",
+          "oklch(72% 0.13 75)",
+          "oklch(82% 0.11 75)",
+          "oklch(91% 0.07 75)",
+          "oklch(97% 0.03 75)"
+        ]
+      },
+      "danger-clay": {
+        "role": "danger",
+        "displayName": "Danger Clay",
+        "canonical": "oklch(48% 0.13 35)",
+        "tonalRamp": [
+          "oklch(20% 0.06 35)",
+          "oklch(32% 0.09 35)",
+          "oklch(40% 0.11 35)",
+          "oklch(48% 0.13 35)",
+          "oklch(62% 0.12 35)",
+          "oklch(75% 0.09 35)",
+          "oklch(86% 0.06 35)",
+          "oklch(95% 0.025 35)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display (Fraunces)",
+        "purpose": "Hero numbers and editorial introductions — the streak count, the WeatherCard temperature, Onboarding 'Welcome' panes, the PlantDetail nickname over the photo. One Fraunces moment per surface."
+      },
+      "headline": {
+        "displayName": "Headline (Fraunces)",
+        "purpose": "TopAppBar titles on primary destinations and 'Plant of the month' editorial labels."
+      },
+      "title": {
+        "displayName": "Title (Plus Jakarta Sans)",
+        "purpose": "Card titles, action tiles, in-card section headings."
+      },
+      "body": {
+        "displayName": "Body (Plus Jakarta Sans)",
+        "purpose": "Default copy: helper text, descriptions, supporting captions."
+      },
+      "label": {
+        "displayName": "Label (Plus Jakarta Sans, tracked)",
+        "purpose": "The Terracotta 'stamp' label that names a card. 0.5sp tracking, SemiBold."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-default",
+        "value": "Material 3 elevation 1dp",
+        "purpose": "Default card resting state. Subtle tonal lift from the Paper Cream surface."
+      },
+      {
+        "name": "card-interactive",
+        "value": "Material 3 elevation 2dp",
+        "purpose": "Tappable cards (PlantCard on PlantList, ActionTile in AddPlant chooser default branch)."
+      },
+      {
+        "name": "card-recommended",
+        "value": "Material 3 elevation 4dp",
+        "purpose": "Reserved for the single 'recommended path' tile on a chooser screen — currently the Identify ActionTile in AddPlant."
+      }
+    ],
+    "motion": [
+      {
+        "name": "onboarding-step",
+        "value": "AnimatedContent: fadeIn() togetherWith fadeOut()",
+        "purpose": "Cross-fade between Welcome / Permissions / Ready panes. The maximum motion in the system."
+      },
+      {
+        "name": "ripple-default",
+        "value": "Material 3 default ripple",
+        "purpose": "Tap feedback on all interactive elements. No custom hover or pressed treatments."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "compact (<600dp)",
+        "purpose": "The default and only target. PlantList runs a 2-column grid; cards reflow to fillMaxWidth at smaller widths."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Forest-deep filled button on Paper Cream surfaces. Used for confirming a flow ('Save plant', 'Save changes', 'Grant camera').",
+      "html": "<button class=\"ds-btn-primary\">Save plant</button>",
+      "css": ".ds-btn-primary { background: #1F3A2E; color: #F5EFE0; padding: 12px 24px; border: none; border-radius: 20px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.1px; cursor: pointer; transition: background 200ms ease, opacity 200ms ease; } .ds-btn-primary:hover { background: oklch(28% 0.04 155); } .ds-btn-primary:focus-visible { outline: 2px solid #C66B3D; outline-offset: 2px; } .ds-btn-primary:active { opacity: 0.85; } .ds-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }"
+    },
+    {
+      "name": "Tertiary FAB",
+      "kind": "button",
+      "refersTo": "button-tertiary",
+      "description": "The single Terracotta FAB on PlantList — the 'add a plant' affordance. The most prominent terracotta element in the app, never duplicated on the same screen.",
+      "html": "<button class=\"ds-fab-tertiary\" aria-label=\"Add plant\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"/><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"/></svg></button>",
+      "css": ".ds-fab-tertiary { background: #C66B3D; color: #F5EFE0; width: 56px; height: 56px; border: none; border-radius: 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 3px 6px rgba(31, 58, 46, 0.18); transition: background 200ms ease, transform 200ms ease; } .ds-fab-tertiary:hover { background: oklch(55% 0.125 45); } .ds-fab-tertiary:focus-visible { outline: 2px solid #1F3A2E; outline-offset: 2px; } .ds-fab-tertiary:active { transform: scale(0.96); }"
+    },
+    {
+      "name": "Outlined Danger Button",
+      "kind": "button",
+      "refersTo": "button-outlined-danger",
+      "description": "Used for 'Archive plant' on EditPlant. Always paired with a confirm AlertDialog and an in-screen Snackbar Undo.",
+      "html": "<button class=\"ds-btn-outlined-danger\">Archive plant</button>",
+      "css": ".ds-btn-outlined-danger { background: transparent; color: #A34A2E; padding: 12px 24px; border: 1px solid #A34A2E; border-radius: 20px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 200ms ease; } .ds-btn-outlined-danger:hover { background: rgba(163, 74, 46, 0.08); } .ds-btn-outlined-danger:focus-visible { outline: 2px solid #A34A2E; outline-offset: 2px; }"
+    },
+    {
+      "name": "Card Surface",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "The default Paper Cream card with 20dp radius and 1dp elevation. 24dp internal padding. Hosts the Dashboard cards, Settings sections, and AddPlant action tiles.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-stamp\">Plant of the month</div><h3 class=\"ds-card-title\">Mona</h3><p class=\"ds-card-body\">12 waterings in the last 30 days</p></div>",
+      "css": ".ds-card { background: #F5EFE0; border-radius: 20px; padding: 24px; box-shadow: 0 1px 3px rgba(31, 58, 46, 0.08); display: flex; flex-direction: column; gap: 4px; } .ds-card-stamp { color: #C66B3D; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; } .ds-card-title { color: #1F3A2E; font-family: 'Fraunces', Georgia, serif; font-size: 26px; font-weight: 600; line-height: 32px; margin: 4px 0 0 0; } .ds-card-body { color: #3B3F3B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; line-height: 20px; margin: 0; }"
+    },
+    {
+      "name": "Filter Chip (selected)",
+      "kind": "chip",
+      "refersTo": "chip-filter-selected",
+      "description": "The selected state of LocationSelector chips on AddPlant / EditPlant. Sage Muted background with Forest Deep text — the warmest selection state in the system.",
+      "html": "<button class=\"ds-chip-selected\" aria-pressed=\"true\">Indoor</button>",
+      "css": ".ds-chip-selected { background: #8BA888; color: #1F3A2E; padding: 6px 14px; border: none; border-radius: 999px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 150ms ease; } .ds-chip-selected:hover { background: oklch(68% 0.045 145); } .ds-chip-selected:focus-visible { outline: 2px solid #1F3A2E; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outlined Input",
+      "kind": "input",
+      "refersTo": "input-outlined",
+      "description": "Material 3 OutlinedTextField with Forest Deep focus stroke. Used for nickname, species autocomplete, notes, etc.",
+      "html": "<label class=\"ds-input-wrap\"><span class=\"ds-input-label\">Nickname</span><input class=\"ds-input\" placeholder=\"Mona the monstera\" /></label>",
+      "css": ".ds-input-wrap { display: inline-flex; flex-direction: column; gap: 4px; width: 100%; } .ds-input-label { color: #3B3F3B; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.5px; } .ds-input { background: transparent; color: #121412; padding: 12px 16px; border: 1px solid #3B3F3B; border-radius: 8px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 16px; transition: border-color 150ms ease, border-width 150ms ease; outline: none; width: 100%; box-sizing: border-box; } .ds-input:focus { border-color: #1F3A2E; border-width: 2px; padding: 11px 15px; } .ds-input::placeholder { color: rgba(59, 63, 59, 0.55); }"
+    },
+    {
+      "name": "Hero Photo (PlantDetail)",
+      "kind": "custom",
+      "refersTo": "hero-photo",
+      "description": "The full-bleed plant photo on PlantDetail. 1.4:1 aspect ratio, ContentScale.Crop, 25% black scrim under the displayMedium serif nickname. The most editorial surface in the system.",
+      "html": "<figure class=\"ds-hero\"><img class=\"ds-hero-img\" src=\"data:image/svg+xml;utf8,%3Csvg xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27 viewBox%3D%270 0 700 500%27%3E%3Crect width%3D%27700%27 height%3D%27500%27 fill%3D%27%238BA888%27%2F%3E%3Cpath d%3D%27M120 380 Q200 220 360 260 T620 200%27 stroke%3D%27%231F3A2E%27 stroke-width%3D%2716%27 fill%3D%27none%27 opacity%3D%270.4%27%2F%3E%3C%2Fsvg%3E\" alt=\"\"/><div class=\"ds-hero-scrim\"></div><figcaption class=\"ds-hero-caption\"><span class=\"ds-hero-name\">Mona</span><span class=\"ds-hero-sub\">Monstera deliciosa · Indoor</span></figcaption></figure>",
+      "css": ".ds-hero { position: relative; width: 100%; aspect-ratio: 1.4 / 1; margin: 0; overflow: hidden; background: #8BA888; } .ds-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; } .ds-hero-scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.25); pointer-events: none; } .ds-hero-caption { position: absolute; left: 24px; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 4px; } .ds-hero-name { color: #F5EFE0; font-family: 'Fraunces', Georgia, serif; font-size: 36px; font-weight: 600; line-height: 42px; letter-spacing: -0.25px; } .ds-hero-sub { color: rgba(245, 239, 224, 0.78); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; line-height: 20px; }"
+    },
+    {
+      "name": "Top App Bar",
+      "kind": "nav",
+      "refersTo": "card-surface",
+      "description": "Paper-cream top bar with Fraunces title and IconButton actions. headlineLarge on primary destinations, headlineSmall on sub-flows. No surface tint, no scroll-elevation lift.",
+      "html": "<header class=\"ds-topbar\"><button class=\"ds-topbar-icon\" aria-label=\"Back\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"19\" y1=\"12\" x2=\"5\" y2=\"12\"/><polyline points=\"12 19 5 12 12 5\"/></svg></button><h1 class=\"ds-topbar-title\">Your garden</h1><div class=\"ds-topbar-spacer\"></div></header>",
+      "css": ".ds-topbar { background: #F5EFE0; display: flex; align-items: center; gap: 8px; padding: 12px 8px; min-height: 56px; } .ds-topbar-icon { background: transparent; border: none; padding: 8px; border-radius: 999px; color: #1F3A2E; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 150ms ease; } .ds-topbar-icon:hover { background: rgba(31, 58, 46, 0.08); } .ds-topbar-title { color: #1F3A2E; font-family: 'Fraunces', Georgia, serif; font-size: 26px; font-weight: 600; line-height: 32px; margin: 0; flex: 1; } .ds-topbar-spacer { width: 8px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Field Journal",
+    "overview": "FloraCare is a quiet hardback gardening book on a phone. Forest-deep ink on warm paper-cream stock, set in a serif display face (Fraunces) with a humanist sans (Plus Jakarta Sans) for everything else. The aesthetic register is herbarium and editorial — a cataloguer's notebook, not a consumer plant-care feed. The user is browsing their own garden, not being sold to.\n\nDensity is low and intentional. Most surfaces have one anchor — a photo, a number, a title — and let the rest of the page breathe. Where Material 3 demos stack four equal-weight cards, FloraCare picks one card and lets it speak.\n\nThis system explicitly rejects the 'wellness app' pastel-gradient look, generic shadcn dashboard uniformity, hero-metric SaaS clichés, gradient text, glassmorphism, and anything that reads as 'AI-generated indie app.' Streaks are recorded but never used as guilt. The terracotta accent is rare and hot — a bookbinder's stamp, not a brand color sprayed across every surface.",
+    "keyCharacteristics": [
+      "Paper-cream surfaces, never #fff. Forest-deep text, never #000.",
+      "Serif display (Fraunces) on hero text, headlines, and the streak number. Plus Jakarta Sans everywhere else.",
+      "Photos are the catalog. Where a plant photo or species image exists, it is the visual anchor.",
+      "Terracotta is rare. It marks one accent per surface — a labelLarge, an FAB, a single line of supporting metadata.",
+      "Cards are flat, slightly elevated (1–2dp), and large-radius (20dp). Not stacked at uniform weight; one earns visual emphasis on each screen.",
+      "Motion is restrained: state changes only. No choreography, no spring physics, no decorative entrances."
+    ],
+    "rules": [
+      { "name": "The One Stamp Rule", "body": "Terracotta appears on at most one element per surface as the user's eye hits it. The 'Plant of the month' labelLarge, the FAB on PlantList, the next-task hint on a card — these are mutually exclusive on any single screen.", "section": "colors" },
+      { "name": "The No White Rule", "body": "#FFFFFF and #000000 are forbidden in this system. Even white image scrims use Color.Black at 25% alpha. Light backgrounds are always Paper Cream. Dark backgrounds are always Charcoal Dark.", "section": "colors" },
+      { "name": "The Photo-First Rule", "body": "Where a plant cover photo or species imageUrl exists, it owns the visual real estate of its container. Solid colored blocks are not a substitute for absent photos — treat absence as white space, not as decoration.", "section": "colors" },
+      { "name": "The One Serif Per Card Rule", "body": "Inside a single Card, only one element uses Fraunces — the title or the hero number, never both.", "section": "typography" },
+      { "name": "The Stamp-Label Rule", "body": "Label Large in Terracotta is the system's signature mark for 'this card has a name.' Tags exactly one element per card, always at the top, always in labelLarge weight and 0.5sp tracking.", "section": "typography" },
+      { "name": "The No-Display-In-Buttons Rule", "body": "Fraunces never appears in buttons, form fields, chips, or any interactive component. Display type is for reading, not tapping.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces sit at 1dp. Hover, focus, and pressed states do not lift higher than 2dp. The only justified 4dp surface is the recommended path on a chooser screen, used at most once per flow.", "section": "elevation" },
+      { "name": "The No-Shadow-On-Photos Rule", "body": "Hero photos and plant cover images do not sit inside cards with shadows. Full-bleed boxes with a 25% black scrim — depth comes from the photo's content, not from a frame around it.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Paper Cream (#F5EFE0) for all light-mode backgrounds and surfaces. Never #FFFFFF.",
+      "Do use Charcoal Dark (#1A1C1A) for all dark-mode backgrounds and surfaces. Never #000000.",
+      "Do reserve Fraunces for one element per card — either the title or the hero number, never both.",
+      "Do apply Terracotta on exactly one element per visible surface, sized to labelLarge with 0.5sp tracking when used as the stamp label.",
+      "Do show a real photo on every plant surface where one exists in coverPhotoUri or species.imageUrl. Use Coil's AsyncImage, ContentScale.Crop.",
+      "Do keep card elevations flat (1dp default, 2dp for interactive) and reserve 4dp for the single recommended-path tile on a chooser.",
+      "Do use Material 3 default ripple — no custom hover or pressed treatments.",
+      "Do treat archive, delete, and other destructive actions with an AlertDialog confirm and an in-screen Snackbar Undo, matching the EditPlant precedent.",
+      "Do use FilterChip for location selection and SegmentedButton for binary preferences (theme mode, units), matching the Settings precedent.",
+      "Do write copy in the voice of a careful field-journal entry — confident, low-frequency, no exclamation points, no engagement hooks."
+    ],
+    "donts": [
+      "Don't stack four cards of identical shape, surface color, elevation, and padding on a single screen. The current Dashboard and Settings layouts violate this; future revisions must give one card visual emphasis.",
+      "Don't ship the hero-metric SaaS template (huge displayLarge number + tiny supporting label + accent stat). The current Dashboard streak card is the example to remove.",
+      "Don't use a flat colored block as a substitute for an absent plant photo. Render the photo or leave the space genuinely empty.",
+      "Don't put a clickable affordance on an element that does nothing. The PlantDetail Vital chips currently use AssistChip(onClick = {}) — replace with a non-clickable Surface or wire the click to a real explanation sheet.",
+      "Don't leak implementation copy into UX. 'Fires once per day at 07:00 local', 'falls back to a mock species list', '73% confidence' — translate to human language or delete.",
+      "Don't mix headlineLarge and headlineSmall for the same role across screens. Primary-destination top bars use headlineLarge. Sub-flow top bars use headlineSmall.",
+      "Don't use gradient text, background-clip: text, or any decorative gradient. Emphasis is weight or scale, never gradient.",
+      "Don't apply glassmorphism, blur backgrounds, or decorative blobs anywhere. The herbarium register is paper, not frosted glass.",
+      "Don't use motion as decoration. Onboarding's AnimatedContent fade is the maximum.",
+      "Don't use streak counts, watering totals, or low-confidence percentages as guilt or pressure.",
+      "Don't ape Plantix's ad-heavy feed, generic shadcn dashboards, 'wellness app' pastel gradients, or Material 3 demo conventions.",
+      "Don't pair Terracotta with Danger Clay on the same surface. They share a hue family and fight visually."
+    ]
+  }
+}

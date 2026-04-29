@@ -12,12 +12,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.Umbrella
 import androidx.compose.material.icons.outlined.WaterDrop
@@ -72,7 +73,7 @@ fun DashboardScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -213,19 +214,21 @@ private fun WeatherCard(weather: WeatherSnapshot?, temperatureUnit: TemperatureU
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.height(14.dp),
                             )
+                            Spacer(Modifier.width(4.dp))
                             Text(
                                 "${weather.humidityPct.roundToInt()}% humidity",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             if (weather.rainMm > 0f) {
-                                Spacer(Modifier.padding(horizontal = 4.dp))
+                                Spacer(Modifier.width(12.dp))
                                 Icon(
                                     Icons.Outlined.Umbrella,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.height(14.dp),
                                 )
+                                Spacer(Modifier.width(4.dp))
                                 Text(
                                     "${"%.1f".format(weather.rainMm)} mm",
                                     style = MaterialTheme.typography.bodySmall,
@@ -237,7 +240,7 @@ private fun WeatherCard(weather: WeatherSnapshot?, temperatureUnit: TemperatureU
                         Text(
                             "Updated ${formatWeatherAge(Clock.System.now(), weather.recordedAt)}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = accents.terracotta,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -293,7 +296,7 @@ private fun StreakHeroCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    if (streakDays == 1) "day watering streak" else "day watering streak",
+                    if (streakDays == 1) "day watering streak" else "days watering streak",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -301,7 +304,7 @@ private fun StreakHeroCard(
                 Text(
                     "$totalWatersLast30d watering${if (totalWatersLast30d == 1) "" else "s"} in the last 30 days",
                     style = MaterialTheme.typography.labelMedium,
-                    color = accents.terracotta,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

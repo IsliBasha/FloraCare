@@ -59,6 +59,7 @@ private fun buildPlantCard(
     speciesName = species?.commonName?.takeIf { it.isNotBlank() } ?: "Unknown species",
     nextTaskLabel = nextTaskLabel(nextTask, now, tz),
     accent = accentFor(plant.speciesId),
+    photoUri = plant.coverPhotoUri ?: species?.imageUrl,
 )
 
 internal fun nextTaskLabel(task: CareTask?, now: Instant, tz: TimeZone): String {

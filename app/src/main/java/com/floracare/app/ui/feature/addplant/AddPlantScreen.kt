@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -96,12 +95,6 @@ fun AddPlantScreen(
                     icon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
                 )
             }
-            Spacer(Modifier.height(spacing.lg))
-            Text(
-                "Identify uses the on-device classifier. When no model is shipped, it falls back to a mock species list so the flow still works end-to-end.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }

@@ -342,13 +342,19 @@ private fun PredictionRow(prediction: Prediction, onClick: () -> Unit) {
                 fontWeight = FontWeight.Medium,
             )
             Text(
-                "${(prediction.confidence * 100).toInt()}% confidence",
+                confidenceBand(prediction.confidence),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         TextButton(onClick = onClick) { Text("Choose") }
     }
+}
+
+private fun confidenceBand(confidence: Float): String = when {
+    confidence >= 0.6f -> "Strong match"
+    confidence >= 0.35f -> "Possible match"
+    else -> "Best guess"
 }
 
 @Composable

@@ -19,8 +19,6 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PhotoCamera
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -244,15 +243,9 @@ private fun Hero(plant: Plant, species: Species?, accent: Color) {
             append(" · ")
         }
         append(plant.locationTag.display())
-        if (plant.notes.isNotBlank()) {
-            append(" · ")
-            append(plant.notes)
-        }
     }
-    // Prefer the user's own photo; fall back to Perenual's species image when
-    // available; otherwise keep the solid accent block. The scrim below keeps
-    // the subtitle legible against any busy photo.
     val heroImage = plant.coverPhotoUri ?: species?.imageUrl
+    val onPhoto = heroImage != null
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -260,7 +253,7 @@ private fun Hero(plant: Plant, species: Species?, accent: Color) {
             .background(accent.copy(alpha = 0.35f)),
         contentAlignment = Alignment.BottomStart,
     ) {
-        if (heroImage != null) {
+        if (onPhoto) {
             AsyncImage(
                 model = heroImage,
                 contentDescription = null,
@@ -270,20 +263,30 @@ private fun Hero(plant: Plant, species: Species?, accent: Color) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.25f)),
+                    .background(Color.Black.copy(alpha = 0.32f)),
             )
+        }
+        val nicknameColor = if (onPhoto) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onBackground
+        }
+        val subtitleColor = if (onPhoto) {
+            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
         }
         Column(Modifier.padding(spacing.lg)) {
             Text(
                 plant.nickname,
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = nicknameColor,
             )
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = subtitleColor,
             )
         }
     }
@@ -291,27 +294,24 @@ private fun Hero(plant: Plant, species: Species?, accent: Color) {
 
 @Composable
 private fun Vital(label: String, value: String, accent: Color) {
-    AssistChip(
-        onClick = {},
-        label = {
-            Column {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    value,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = accent,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        },
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-    )
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                value,
+                style = MaterialTheme.typography.titleSmall,
+                color = accent,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
 }
 
 @Composable
