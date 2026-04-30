@@ -124,6 +124,7 @@ private fun ReadyContent(
             Hero(plant = plant, species = species, accent = accents.sage)
         }
         item {
+            val waterTask = state.upcoming.firstOrNull { it.type == CareTaskType.WATER }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(spacing.sm),
                 modifier = Modifier
@@ -132,12 +133,9 @@ private fun ReadyContent(
             ) {
                 Vital(
                     label = "Water",
-                    value = state.upcoming
-                        .firstOrNull { it.type == CareTaskType.WATER }
-                        ?.label
-                        ?.substringBefore(" · ")
-                        ?: "None scheduled",
+                    value = waterTask?.label?.substringBefore(" · ") ?: "None scheduled",
                     accent = accents.terracotta,
+                    sub = waterTask?.reasonLabel,
                 )
                 Vital(
                     label = "Light",
@@ -167,13 +165,21 @@ private fun ReadyContent(
                         modifier = Modifier.padding(vertical = 4.dp),
                     )
                 } else {
-                    state.upcoming.forEach {
-                        Text(
-                            "·  ${it.label}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 4.dp),
-                        )
+                    state.upcoming.forEach { task ->
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            Text(
+                                "·  ${task.label}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            task.reasonLabel?.let { reason ->
+                                Text(
+                                    "    $reason",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -293,7 +299,7 @@ private fun Hero(plant: Plant, species: Species?, accent: Color) {
 }
 
 @Composable
-private fun Vital(label: String, value: String, accent: Color) {
+private fun Vital(label: String, value: String, accent: Color, sub: String? = null) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         shape = MaterialTheme.shapes.small,
@@ -310,6 +316,13 @@ private fun Vital(label: String, value: String, accent: Color) {
                 color = accent,
                 fontWeight = FontWeight.SemiBold,
             )
+            sub?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
