@@ -1,5 +1,6 @@
 package com.floracare.app.domain.usecase
 
+import com.floracare.app.domain.model.CareAdjustmentReason
 import com.floracare.app.domain.model.CareLog
 import com.floracare.app.domain.model.CareTaskType
 import com.floracare.app.domain.model.HumidityNeed
@@ -167,5 +168,136 @@ class ComputeNextCareTaskUseCaseTest {
             "expected clamped to base*2 (${1 * 2}), got ${extreme.scheduledAt - now}",
             extreme.scheduledAt == now + (1 * 2).days,
         )
+    }
+
+    // decide(): ambient conditions normal → no modifiers fired.
+    @Test
+    fun `decide reports empty reasons when no modifiers fire`() {
+        val decision = useCase.decide(
+            plant = plant(),
+            species = species(waterFrequencyDays = 10),
+            recentLogs = emptyList(),
+            recentWeather = listOf(
+                weather(hoursAgo = 4, temp = 22f, humidity = 55f, rain = 0f),
+                weather(hoursAgo = 28, temp = 21f, humidity = 60f, rain = 0f),
+            ),
+            now = now,
+        )
+        assertEquals(emptySet<CareAdjustmentReason>(), decision.reasons)
+        assertEquals(now + 10.days, decision.task.scheduledAt)
+    }
+
+    @Test
+    fun `decide reports HEAT when avg temp exceeds threshold`() {
+        val decision = useCase.decide(
+            plant = plant(),
+            species = species(waterFrequencyDays = 10),
+            recentLogs = emptyList(),
+            recentWeather = listOf(
+                weather(hoursAgo = 4, temp = 30f),
+                weather(hoursAgo = 28, temp = 31f),
+            ),
+            now = now,
+        )
+        assertTrue(CareAdjustmentReason.HEAT in decision.reasons)
+        assertEquals(setOf(CareAdjustmentReason.HEAT), decision.reasons)
+    }
+
+    @Test
+    fun `decide reports RAIN only when plant is outdoor`() {
+        val outdoor = useCase.decide(
+            plant = plant(location = LocationTag.OUTDOOR),
+            species = species(waterFrequencyDays = 10),
+            recentLogs = emptyList(),
+            recentWeather = listOf(
+                weather(hoursAgo = 4, rain = 8f),
+                weather(hoursAgo = 28, rain = 5f),
+            ),
+            now = now,
+        )
+        val indoor = useCase.decide(
+            plant = plant(location = LocationTag.INDOOR),
+            species = species(waterFrequencyDays = 10),
+            recentLogs = emptyList(),
+            recentWeather = listOf(
+                weather(hoursAgo = 4, rain = 8f),
+                weather(hoursAgo = 28, rain = 5f),
+            ),
+            now = now,
+        )
+        assertTrue(CareAdjustmentReason.RAIN in outdoor.reasons)
+        assertTrue(
+            "indoor plants must not trigger RAIN",
+            CareAdjustmentReason.RAIN !in indoor.reasons,
+        )
+    }
+
+    @Test
+    fun `decide reports LOW_HUMIDITY when 3-day average is below threshold`() {
+        val decision = useCase.decide(
+            plant = plant(),
+            species = species(waterFrequencyDays = 10),
+            recentLogs = emptyList(),
+            recentWeather = listOf(
+                weather(hoursAgo = 4, humidity = 25f),
+                weather(hoursAgo = 28, humidity = 20f),
+            ),
+            now = now,
+        )
+        assertEquals(setOf(CareAdjustmentReason.LOW_HUMIDITY), decision.reasons)
+    }
+
+    @Test
+    fun `decide reports DAMP_SOIL when last two logs are DAMP`() {
+        val decision = useCase.decide(
+            plant = plant(),
+            species = species(waterFrequencyDays = 10),
+            recentLogs = listOf(
+                log(daysAgo = 1, moisture = SoilMoistureNote.DAMP),
+                log(daysAgo = 3, moisture = SoilMoistureNote.DAMP),
+            ),
+            recentWeather = emptyList(),
+            now = now,
+        )
+        assertEquals(setOf(CareAdjustmentReason.DAMP_SOIL), decision.reasons)
+    }
+
+    @Test
+    fun `decide stacks every applicable reason at once`() {
+        val decision = useCase.decide(
+            plant = plant(location = LocationTag.OUTDOOR),
+            species = species(waterFrequencyDays = 10),
+            recentLogs = listOf(
+                log(daysAgo = 1, moisture = SoilMoistureNote.DAMP),
+                log(daysAgo = 3, moisture = SoilMoistureNote.DAMP),
+            ),
+            recentWeather = listOf(
+                weather(hoursAgo = 4, temp = 30f, humidity = 25f, rain = 8f),
+                weather(hoursAgo = 28, temp = 31f, humidity = 20f, rain = 6f),
+            ),
+            now = now,
+        )
+        assertEquals(
+            setOf(
+                CareAdjustmentReason.HEAT,
+                CareAdjustmentReason.RAIN,
+                CareAdjustmentReason.LOW_HUMIDITY,
+                CareAdjustmentReason.DAMP_SOIL,
+            ),
+            decision.reasons,
+        )
+    }
+
+    @Test
+    fun `invoke returns the same task as decide`() {
+        val plant = plant(location = LocationTag.OUTDOOR)
+        val species = species(waterFrequencyDays = 10)
+        val logs = emptyList<CareLog>()
+        val weather = listOf(weather(hoursAgo = 4, rain = 8f), weather(hoursAgo = 28, rain = 6f))
+        val decided = useCase.decide(plant, species, logs, weather, now).task
+        val invoked = useCase(plant, species, logs, weather, now)
+        assertEquals(decided.scheduledAt, invoked.scheduledAt)
+        assertEquals(decided.type, invoked.type)
+        assertEquals(decided.plantId, invoked.plantId)
     }
 }
