@@ -10,6 +10,7 @@ import com.floracare.app.domain.model.Species
 import com.floracare.app.domain.model.Toxicity
 import com.floracare.app.domain.model.WeatherSnapshot
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
@@ -167,7 +168,7 @@ class DashboardMappingTest {
         assertEquals("Snake Plant", snap.plantOfTheMonth?.speciesName)
     }
 
-    private fun plant(id: String, nick: String, speciesId: String? = null) = Plant(
+    private fun plant(id: String, nick: String, speciesId: String? = null, archived: Boolean = false) = Plant(
         id = id,
         nickname = nick,
         speciesId = speciesId,
@@ -175,6 +176,7 @@ class DashboardMappingTest {
         acquiredAt = now - 500.hours,
         coverPhotoUri = null,
         notes = "",
+        archived = archived,
     )
 
     private fun species(id: String, common: String) = Species(
@@ -286,6 +288,150 @@ class DashboardMappingTest {
         )
         assertNotNull(snap.currentWeather)
         assertEquals("w-edge", snap.currentWeather?.id)
+    }
+
+    // ── CareCompletion ring ────────────────────────────────────────────────────
+
+    @Test
+    fun `weekCareCompletion is zero-zero when there are no plants`() {
+        val snap = toDashboard(
+            logs = emptyList(),
+            plants = emptyList(),
+            species = emptyList(),
+            now = now,
+            tz = tz,
+        )
+        assertEquals(0, snap.weekCareCompletion.plantsWateredCount)
+        assertEquals(0, snap.weekCareCompletion.totalActivePlants)
+    }
+
+    @Test
+    fun `weekCareCompletion counts active plants and those watered in the last 7 days`() {
+        val plants = listOf(
+            plant("p1", "Mona"),
+            plant("p2", "Finn"),
+            plant("p3", "Rex"),
+        )
+        val logs = listOf(
+            waterLog("l1", "p1", at = now - 2.hours),
+            waterLog("l2", "p2", at = now - 48.hours),
+        )
+        val snap = toDashboard(logs = logs, plants = plants, species = emptyList(), now = now, tz = tz)
+        assertEquals(2, snap.weekCareCompletion.plantsWateredCount)
+        assertEquals(3, snap.weekCareCompletion.totalActivePlants)
+    }
+
+    @Test
+    fun `weekCareCompletion does not count a plant watered outside the 7-day window`() {
+        val plants = listOf(plant("p1", "Mona"))
+        val logs = listOf(
+            waterLog("l1", "p1", at = now - (7 * 24 + 1).hours),
+        )
+        val snap = toDashboard(logs = logs, plants = plants, species = emptyList(), now = now, tz = tz)
+        assertEquals(0, snap.weekCareCompletion.plantsWateredCount)
+        assertEquals(1, snap.weekCareCompletion.totalActivePlants)
+    }
+
+    @Test
+    fun `weekCareCompletion counts a plant only once even if watered multiple times in the window`() {
+        val plants = listOf(plant("p1", "Mona"))
+        val logs = listOf(
+            waterLog("l1", "p1", at = now - 1.hours),
+            waterLog("l2", "p1", at = now - 24.hours),
+            waterLog("l3", "p1", at = now - 48.hours),
+        )
+        val snap = toDashboard(logs = logs, plants = plants, species = emptyList(), now = now, tz = tz)
+        assertEquals(1, snap.weekCareCompletion.plantsWateredCount)
+        assertEquals(1, snap.weekCareCompletion.totalActivePlants)
+    }
+
+    @Test
+    fun `weekCareCompletion excludes non-WATER care log types`() {
+        val plants = listOf(plant("p1", "Mona"))
+        val logs = listOf(
+            careLog("l1", "p1", type = CareTaskType.FERTILIZE, at = now - 1.hours),
+            careLog("l2", "p1", type = CareTaskType.MIST, at = now - 2.hours),
+        )
+        val snap = toDashboard(logs = logs, plants = plants, species = emptyList(), now = now, tz = tz)
+        assertEquals(0, snap.weekCareCompletion.plantsWateredCount)
+        assertEquals(1, snap.weekCareCompletion.totalActivePlants)
+    }
+
+    @Test
+    fun `weekCareCompletion excludes archived plants from both counts`() {
+        val plants = listOf(
+            plant("p1", "Mona"),
+            plant("p2", "Archived", archived = true),
+        )
+        val logs = listOf(
+            waterLog("l1", "p1", at = now - 1.hours),
+            waterLog("l2", "p2", at = now - 2.hours),
+        )
+        val snap = toDashboard(logs = logs, plants = plants, species = emptyList(), now = now, tz = tz)
+        assertEquals(1, snap.weekCareCompletion.plantsWateredCount)
+        assertEquals(1, snap.weekCareCompletion.totalActivePlants)
+    }
+
+    @Test
+    fun `weekCareCompletion includes log at exactly the 7-day boundary`() {
+        val plants = listOf(plant("p1", "Mona"))
+        val logs = listOf(
+            waterLog("l1", "p1", at = now - (7 * 24).hours),
+        )
+        val snap = toDashboard(logs = logs, plants = plants, species = emptyList(), now = now, tz = tz)
+        assertEquals(1, snap.weekCareCompletion.plantsWateredCount)
+    }
+
+    // ── Sparkline week labels ──────────────────────────────────────────────────
+
+    @Test
+    fun `sparklineWeekLabels has one entry per day matching dailyWaterCounts size`() {
+        val snap = toDashboard(
+            logs = emptyList(),
+            plants = emptyList(),
+            species = emptyList(),
+            now = now,
+            tz = tz,
+        )
+        assertEquals(snap.dailyWaterCounts.size, snap.sparklineWeekLabels.size)
+    }
+
+    @Test
+    fun `sparklineWeekLabels is non-null only at Monday boundaries`() {
+        val snap = toDashboard(
+            logs = emptyList(),
+            plants = emptyList(),
+            species = emptyList(),
+            now = now,
+            tz = tz,
+        )
+        val nonNullLabels = snap.sparklineWeekLabels.filterNotNull()
+        assertTrue("expected at least one week label over 30 days", nonNullLabels.isNotEmpty())
+        snap.sparklineWeekLabels.forEachIndexed { i, label ->
+            if (label != null) {
+                val date = snap.dailyWaterCounts[i].date
+                assertEquals(
+                    "label at index $i ($date) is not Monday",
+                    DayOfWeek.MONDAY,
+                    date.dayOfWeek,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `sparklineWeekLabels format is abbreviated month and day`() {
+        // now = 2026-04-23 (Thursday). Window starts 2026-03-25.
+        // First Monday in window = 2026-03-30.
+        val snap = toDashboard(
+            logs = emptyList(),
+            plants = emptyList(),
+            species = emptyList(),
+            now = now,
+            tz = tz,
+        )
+        val firstLabel = snap.sparklineWeekLabels.first { it != null }
+        assertEquals("Mar 30", firstLabel)
     }
 
 }

@@ -6,6 +6,7 @@ import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
 import com.floracare.app.domain.model.WeatherSnapshot
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -13,6 +14,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 
 /** Size of the dashboard trend window, in days (inclusive of today). */
@@ -23,6 +25,12 @@ const val DASHBOARD_WINDOW_DAYS: Int = 30
  * "current weather" on the dashboard.
  */
 val DASHBOARD_WEATHER_FRESHNESS: Duration = 24.hours
+
+/** How many of the user's active plants were watered at least once in the last 7 days. */
+data class CareCompletion(
+    val plantsWateredCount: Int,
+    val totalActivePlants: Int,
+)
 
 data class DailyCount(val date: LocalDate, val count: Int)
 
@@ -39,6 +47,13 @@ data class DashboardSnapshot(
     val totalWatersLast30d: Int,
     val plantOfTheMonth: PlantOfTheMonth?,
     val currentWeather: WeatherSnapshot?,
+    /** X-of-Y care completion for the rolling 7-day window. */
+    val weekCareCompletion: CareCompletion,
+    /**
+     * One optional label per entry in [dailyWaterCounts]; non-null only at
+     * Monday (ISO day 1) boundaries, formatted as "MMM d" (e.g. "Mar 30").
+     */
+    val sparklineWeekLabels: List<String?>,
 )
 
 /**
@@ -81,12 +96,17 @@ fun toDashboard(
         .maxByOrNull { it.recordedAt }
         ?.takeIf { now - it.recordedAt <= DASHBOARD_WEATHER_FRESHNESS }
 
+    val weekCareCompletion = computeWeekCareCompletion(waterLogs, plants, now)
+    val sparklineWeekLabels = buildSparklineWeekLabels(dailyWaterCounts)
+
     return DashboardSnapshot(
         dailyWaterCounts = dailyWaterCounts,
         currentStreakDays = currentStreakDays,
         totalWatersLast30d = totalWatersLast30d,
         plantOfTheMonth = plantOfTheMonth,
         currentWeather = currentWeather,
+        weekCareCompletion = weekCareCompletion,
+        sparklineWeekLabels = sparklineWeekLabels,
     )
 }
 
@@ -116,6 +136,40 @@ fun formatWeatherAge(now: Instant, recordedAt: Instant): String {
         else -> "${deltaMinutes / (24L * 60L)}d ago"
     }
 }
+
+private fun computeWeekCareCompletion(
+    waterLogs: List<CareLog>,
+    plants: List<Plant>,
+    now: Instant,
+): CareCompletion {
+    val activePlants = plants.filter { !it.archived }
+    if (activePlants.isEmpty()) return CareCompletion(0, 0)
+    val weekStart = now - 7.days
+    val wateredIds = waterLogs
+        .filter { it.performedAt >= weekStart }
+        .map { it.plantId }
+        .toSet()
+    val activeIds = activePlants.map { it.id }.toSet()
+    val wateredActiveCount = wateredIds.count { it in activeIds }
+    return CareCompletion(
+        plantsWateredCount = wateredActiveCount,
+        totalActivePlants = activePlants.size,
+    )
+}
+
+private val MONTH_ABBREVS = listOf(
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+)
+
+private fun buildSparklineWeekLabels(days: List<DailyCount>): List<String?> =
+    days.map { dc ->
+        if (dc.date.dayOfWeek == DayOfWeek.MONDAY) {
+            "${MONTH_ABBREVS[dc.date.monthNumber - 1]} ${dc.date.dayOfMonth}"
+        } else {
+            null
+        }
+    }
 
 private fun pickPlantOfTheMonth(
     waterLogs: List<CareLog>,
