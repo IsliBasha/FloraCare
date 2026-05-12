@@ -1,5 +1,6 @@
 package com.floracare.app.ui.feature.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +49,7 @@ import com.floracare.app.ui.theme.LocalFloraSpacing
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onDeletedPlants: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val spacing = LocalFloraSpacing.current
@@ -100,6 +104,7 @@ fun SettingsScreen(
                 enabled = state.preferences.notificationsEnabled,
                 onToggle = { viewModel.onEvent(SettingsEvent.SetNotificationsEnabled(it)) },
             )
+            DataSection(onDeletedPlants = onDeletedPlants)
             AboutSection(version = state.appVersion)
         }
     }
@@ -215,6 +220,38 @@ private fun NotificationsSection(
                 )
             }
             Switch(checked = enabled, onCheckedChange = onToggle)
+        }
+    }
+}
+
+@Composable
+private fun DataSection(onDeletedPlants: () -> Unit) {
+    SectionCard(title = "Data") {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onDeletedPlants)
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Outlined.DeleteOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
+                Text("Deleted plants", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "View and recover plants you've deleted.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Outlined.ArrowForwardIos,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

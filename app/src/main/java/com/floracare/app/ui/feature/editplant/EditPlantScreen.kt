@@ -79,7 +79,7 @@ fun EditPlantScreen(
             // Show "Archived" snackbar with Undo for ~4s. Either path eventually
             // pops back — Undo just decides whether the archived flag stays flipped.
             val result = snackbarHost.showSnackbar(
-                message = "Plant archived",
+                message = "Plant deleted",
                 actionLabel = "Undo",
                 duration = SnackbarDuration.Short,
             )
@@ -208,14 +208,14 @@ private fun ReadyForm(
             ),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Archive plant")
+            Text("Delete plant")
         }
     }
 
     if (showArchiveDialog) {
         AlertDialog(
             onDismissRequest = { showArchiveDialog = false },
-            title = { Text("Archive this plant?") },
+            title = { Text("Delete this plant?") },
             text = {
                 Text(
                     "It will disappear from your list. You can undo right after.",
@@ -227,7 +227,7 @@ private fun ReadyForm(
                     showArchiveDialog = false
                     onArchiveConfirmed()
                 }) {
-                    Text("Archive", color = MaterialTheme.colorScheme.error)
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {

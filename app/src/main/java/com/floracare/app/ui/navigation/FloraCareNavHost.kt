@@ -16,6 +16,7 @@ import com.floracare.app.ui.feature.journal.JournalScreen
 import com.floracare.app.ui.feature.onboarding.OnboardingScreen
 import com.floracare.app.ui.feature.plantdetail.PlantDetailScreen
 import com.floracare.app.ui.feature.plantlist.PlantListScreen
+import com.floracare.app.ui.feature.deletedplants.DeletedPlantsScreen
 import com.floracare.app.ui.feature.settings.SettingsScreen
 
 @Composable
@@ -114,7 +115,13 @@ fun FloraCareNavHost(
             DashboardScreen(onBack = { navController.popBackStack() })
         }
         composable<FloraRoute.Settings> {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onDeletedPlants = { navController.navigate(FloraRoute.DeletedPlants) },
+            )
+        }
+        composable<FloraRoute.DeletedPlants> {
+            DeletedPlantsScreen(onBack = { navController.popBackStack() })
         }
     }
 }

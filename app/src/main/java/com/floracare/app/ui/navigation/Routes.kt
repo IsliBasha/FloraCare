@@ -14,5 +14,6 @@ sealed interface FloraRoute {
     @Serializable data class Journal(val plantId: String) : FloraRoute
     @Serializable data object Dashboard : FloraRoute
     @Serializable data object Settings : FloraRoute
+    @Serializable data object DeletedPlants : FloraRoute
     @Serializable data class EditPlant(val plantId: String) : FloraRoute
 }
