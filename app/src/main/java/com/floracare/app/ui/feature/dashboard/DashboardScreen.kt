@@ -154,6 +154,7 @@ private fun DashboardContent(
             totalWatersLast30d = snapshot.totalWatersLast30d,
         )
         CareRingCard(completion = snapshot.weekCareCompletion)
+        HealthTrendCard(summary = snapshot.weeklyCareSummary)
         WateringTrendCard(
             dailyCounts = snapshot.dailyWaterCounts,
             weekLabels = snapshot.sparklineWeekLabels,
@@ -558,6 +559,135 @@ private fun Sparkline(
                     }
                 } else {
                     Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HealthTrendCard(summary: List<WeeklyCareSummary>) {
+    if (summary.isEmpty()) return
+    val accents = LocalFloraAccents.current
+    val spacing = LocalFloraSpacing.current
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(spacing.lg),
+        ) {
+            Text(
+                "Care over time",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                "Last ${summary.size} weeks",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(spacing.sm))
+            Row(horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
+                LegendDot(color = accents.sage, label = "Water")
+                LegendDot(color = accents.terracotta.copy(alpha = 0.75f), label = "Other care")
+            }
+            Spacer(Modifier.height(spacing.sm))
+            CareBarChart(
+                summary = summary,
+                waterColor = accents.sage,
+                otherColor = accents.terracotta,
+                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun LegendDot(color: Color, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(color, CircleShape),
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun CareBarChart(
+    summary: List<WeeklyCareSummary>,
+    waterColor: Color,
+    otherColor: Color,
+    labelColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val labelHeightDp = 20.dp
+    val maxCount = summary.maxOf { maxOf(it.waterCount, it.otherCount) }.coerceAtLeast(1)
+
+    BoxWithConstraints(modifier = modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(maxHeight - labelHeightDp),
+        ) {
+            val w = size.width
+            val h = size.height
+            val n = summary.size
+            val groupWidth = w / n
+            val barWidth = groupWidth * 0.28f
+            val barGap = groupWidth * 0.06f
+
+            summary.forEachIndexed { i, week ->
+                val groupCenter = (i + 0.5f) * groupWidth
+                val leftX = groupCenter - barWidth - barGap / 2f
+                val rightX = groupCenter + barGap / 2f
+
+                val waterH = (week.waterCount.toFloat() / maxCount) * h * 0.85f
+                val otherH = (week.otherCount.toFloat() / maxCount) * h * 0.85f
+
+                if (waterH > 0f) drawRect(
+                    color = waterColor,
+                    topLeft = Offset(leftX, h - waterH),
+                    size = Size(barWidth, waterH),
+                )
+                if (otherH > 0f) drawRect(
+                    color = otherColor.copy(alpha = 0.72f),
+                    topLeft = Offset(rightX, h - otherH),
+                    size = Size(barWidth, otherH),
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(labelHeightDp)
+                .align(Alignment.BottomStart),
+        ) {
+            summary.forEach { week ->
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = week.weekLabel,
+                        fontSize = 9.sp,
+                        color = labelColor,
+                    )
                 }
             }
         }

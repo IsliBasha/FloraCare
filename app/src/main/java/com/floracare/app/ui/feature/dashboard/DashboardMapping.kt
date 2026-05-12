@@ -34,6 +34,16 @@ data class CareCompletion(
 
 data class DailyCount(val date: LocalDate, val count: Int)
 
+/**
+ * Per-week breakdown of care actions for the health-trend card.
+ * [weekLabel] is the abbreviated Monday date ("Apr 20"). List is ordered oldest → newest.
+ */
+data class WeeklyCareSummary(
+    val weekLabel: String,
+    val waterCount: Int,
+    val otherCount: Int,
+)
+
 data class PlantOfTheMonth(
     val plantId: String,
     val nickname: String,
@@ -54,6 +64,8 @@ data class DashboardSnapshot(
      * Monday (ISO day 1) boundaries, formatted as "MMM d" (e.g. "Mar 30").
      */
     val sparklineWeekLabels: List<String?>,
+    /** 4-week grouped breakdown (water vs other care) for the health-trend card. */
+    val weeklyCareSummary: List<WeeklyCareSummary>,
 )
 
 /**
@@ -98,6 +110,7 @@ fun toDashboard(
 
     val weekCareCompletion = computeWeekCareCompletion(waterLogs, plants, now)
     val sparklineWeekLabels = buildSparklineWeekLabels(dailyWaterCounts)
+    val weeklyCareSummary = buildWeeklyCareSummary(logs = logs, now = now, tz = tz)
 
     return DashboardSnapshot(
         dailyWaterCounts = dailyWaterCounts,
@@ -107,6 +120,7 @@ fun toDashboard(
         currentWeather = currentWeather,
         weekCareCompletion = weekCareCompletion,
         sparklineWeekLabels = sparklineWeekLabels,
+        weeklyCareSummary = weeklyCareSummary,
     )
 }
 
@@ -170,6 +184,43 @@ private fun buildSparklineWeekLabels(days: List<DailyCount>): List<String?> =
             null
         }
     }
+
+/**
+ * Builds a [weeksBack]-entry list (oldest → newest) summarising water vs other-care
+ * counts per ISO calendar week. The current partial week ends at [now]'s local date.
+ */
+fun buildWeeklyCareSummary(
+    logs: List<CareLog>,
+    now: Instant,
+    tz: TimeZone = TimeZone.currentSystemDefault(),
+    weeksBack: Int = 4,
+): List<WeeklyCareSummary> {
+    val today = now.toLocalDateTime(tz).date
+    val currentWeekMonday = mostRecentMonday(today)
+
+    return (weeksBack - 1 downTo 0).map { weeksAgo ->
+        val weekMonday = currentWeekMonday.minus(DatePeriod(days = weeksAgo * 7))
+        val weekSunday = weekMonday.plus(DatePeriod(days = 6))
+        val rangeEnd = if (weeksAgo == 0) today else weekSunday
+
+        val weekLogs = logs.filter { log ->
+            val logDate = log.performedAt.toLocalDateTime(tz).date
+            logDate >= weekMonday && logDate <= rangeEnd
+        }
+
+        WeeklyCareSummary(
+            weekLabel = "${MONTH_ABBREVS[weekMonday.monthNumber - 1]} ${weekMonday.dayOfMonth}",
+            waterCount = weekLogs.count { it.taskType == CareTaskType.WATER },
+            otherCount = weekLogs.count { it.taskType != CareTaskType.WATER },
+        )
+    }
+}
+
+private fun mostRecentMonday(date: LocalDate): LocalDate {
+    var d = date
+    while (d.dayOfWeek != DayOfWeek.MONDAY) d = d.minus(DatePeriod(days = 1))
+    return d
+}
 
 private fun pickPlantOfTheMonth(
     waterLogs: List<CareLog>,

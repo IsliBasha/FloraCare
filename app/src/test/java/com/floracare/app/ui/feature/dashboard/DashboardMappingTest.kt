@@ -20,6 +20,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -432,6 +433,104 @@ class DashboardMappingTest {
         )
         val firstLabel = snap.sparklineWeekLabels.first { it != null }
         assertEquals("Mar 30", firstLabel)
+    }
+
+    // ── Weekly care summary (health-trend card) ────────────────────────────────
+    // now = 2026-04-23 (Thu UTC). currentWeekMonday = Apr 20.
+    // weeksBack=4 → buckets (oldest first): [Mar 30–Apr 5, Apr 6–12, Apr 13–19, Apr 20–23]
+
+    @Test
+    fun `buildWeeklyCareSummary with empty logs yields 4 zero entries`() {
+        val result = buildWeeklyCareSummary(logs = emptyList(), now = now, tz = tz)
+        assertEquals(4, result.size)
+        assertTrue(result.all { it.waterCount == 0 && it.otherCount == 0 })
+    }
+
+    @Test
+    fun `buildWeeklyCareSummary water log today counted in most-recent entry`() {
+        val result = buildWeeklyCareSummary(
+            logs = listOf(waterLog("l1", "p1", at = now - 1.hours)),
+            now = now,
+            tz = tz,
+        )
+        assertEquals(1, result.last().waterCount)
+        assertEquals(0, result.last().otherCount)
+        // earlier weeks unaffected
+        result.dropLast(1).forEach { assertEquals(0, it.waterCount) }
+    }
+
+    @Test
+    fun `buildWeeklyCareSummary non-water care type counted as otherCount`() {
+        val result = buildWeeklyCareSummary(
+            logs = listOf(careLog("l1", "p1", type = CareTaskType.FERTILIZE, at = now - 1.hours)),
+            now = now,
+            tz = tz,
+        )
+        assertEquals(0, result.last().waterCount)
+        assertEquals(1, result.last().otherCount)
+    }
+
+    @Test
+    fun `buildWeeklyCareSummary log in previous week bucketed correctly`() {
+        // now - 8 days = Apr 15, which is in the Apr 13–19 bucket (index 2)
+        val result = buildWeeklyCareSummary(
+            logs = listOf(waterLog("l1", "p1", at = now - 8.days)),
+            now = now,
+            tz = tz,
+        )
+        assertEquals(1, result[2].waterCount)
+        assertEquals(0, result[3].waterCount)
+    }
+
+    @Test
+    fun `buildWeeklyCareSummary log older than window is excluded`() {
+        // now - 29 days = Mar 25, before the window start of Mar 30
+        val result = buildWeeklyCareSummary(
+            logs = listOf(waterLog("l1", "p1", at = now - 29.days)),
+            now = now,
+            tz = tz,
+        )
+        assertTrue(result.all { it.waterCount == 0 })
+    }
+
+    @Test
+    fun `buildWeeklyCareSummary mixed types in same week separated correctly`() {
+        // Oldest bucket: Mar 30–Apr 5. now=Apr 23, so offsets 18–24 days ago land in this range.
+        val logsInOldestWeek = listOf(
+            waterLog("w1", "p1", at = now - 18.days),  // Apr 5
+            waterLog("w2", "p1", at = now - 20.days),  // Apr 3
+            waterLog("w3", "p1", at = now - 24.days),  // Mar 30
+            careLog("o1", "p1", CareTaskType.FERTILIZE, at = now - 19.days), // Apr 4
+            careLog("o2", "p1", CareTaskType.MIST, at = now - 21.days),      // Apr 2
+        )
+        val result = buildWeeklyCareSummary(logs = logsInOldestWeek, now = now, tz = tz)
+        assertEquals(3, result[0].waterCount)
+        assertEquals(2, result[0].otherCount)
+    }
+
+    @Test
+    fun `buildWeeklyCareSummary labels are Mon dates in chronological order`() {
+        val result = buildWeeklyCareSummary(logs = emptyList(), now = now, tz = tz)
+        assertEquals(listOf("Mar 30", "Apr 6", "Apr 13", "Apr 20"), result.map { it.weekLabel })
+    }
+
+    @Test
+    fun `buildWeeklyCareSummary log on Monday boundary counted in that week`() {
+        // Apr 13 is a Monday — exact start of the Apr 13–19 bucket (index 2)
+        val result = buildWeeklyCareSummary(
+            logs = listOf(waterLog("l1", "p1", at = Instant.parse("2026-04-13T00:00:00Z"))),
+            now = now,
+            tz = tz,
+        )
+        assertEquals(1, result[2].waterCount)
+        assertEquals(0, result[1].waterCount)
+    }
+
+    @Test
+    fun `buildWeeklyCareSummary weeksBack parameter controls result size`() {
+        val result = buildWeeklyCareSummary(logs = emptyList(), now = now, tz = tz, weeksBack = 2)
+        assertEquals(2, result.size)
+        assertEquals(listOf("Apr 13", "Apr 20"), result.map { it.weekLabel })
     }
 
 }
