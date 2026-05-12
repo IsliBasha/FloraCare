@@ -11,6 +11,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -45,6 +46,8 @@ private val ForestDeep = Color(0xFF1F3A2E)
 private val RowSurface = Color(0xFF2A4A3B)
 private val Sage = Color(0xFF5B8C6B)
 private val Terracotta = Color(0xFFC46D4F)
+private val SageButtonBg = Color(0x4D5B8C6B)   // sage ~30% alpha
+private val SnoozeButtonBg = Color(0x26EAE2D0)  // paper-dim ~15% alpha
 
 class TodayTasksWidget : GlanceAppWidget() {
 
@@ -132,6 +135,7 @@ class TodayTasksWidget : GlanceAppWidget() {
 
     @Composable
     private fun TaskRow(context: Context, row: WidgetRow) {
+        val actionParams = actionParametersOf(WidgetTaskIdKey to row.taskId)
         Row(
             modifier = GlanceModifier
                 .fillMaxWidth()
@@ -161,20 +165,47 @@ class TodayTasksWidget : GlanceAppWidget() {
                     ),
                 )
                 Text(
-                    row.taskType.verb(),
+                    "${row.taskType.verb()} · ${row.dueLabel}",
                     style = TextStyle(
-                        color = ColorProvider(PaperDim),
+                        color = ColorProvider(
+                            if (row.dueLabel.contains("ago")) Terracotta else PaperDim,
+                        ),
                         fontSize = sp(10),
                     ),
                 )
             }
-            Text(
-                row.dueLabel,
-                style = TextStyle(
-                    color = ColorProvider(if (row.dueLabel.contains("ago")) Terracotta else Paper),
-                    fontSize = sp(11),
-                ),
-            )
+            Spacer(GlanceModifier.width(6.dp))
+            // ✓ mark done
+            Box(
+                modifier = GlanceModifier
+                    .width(28.dp)
+                    .height(28.dp)
+                    .cornerRadius(6.dp)
+                    .background(ColorProvider(SageButtonBg))
+                    .clickable(actionRunCallback<MarkDoneWidgetCallback>(actionParams)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "✓",
+                    style = TextStyle(color = ColorProvider(Paper), fontSize = sp(12)),
+                )
+            }
+            Spacer(GlanceModifier.width(4.dp))
+            // ↷ snooze 2 days
+            Box(
+                modifier = GlanceModifier
+                    .width(28.dp)
+                    .height(28.dp)
+                    .cornerRadius(6.dp)
+                    .background(ColorProvider(SnoozeButtonBg))
+                    .clickable(actionRunCallback<SnoozeWidgetCallback>(actionParams)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "↷",
+                    style = TextStyle(color = ColorProvider(PaperDim), fontSize = sp(12)),
+                )
+            }
         }
     }
 
