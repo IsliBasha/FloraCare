@@ -26,6 +26,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -63,6 +64,7 @@ fun PlantListScreen(
 ) {
     val spacing = LocalFloraSpacing.current
     val state by viewModel.state.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val plants: List<PlantCardUi> = (state as? PlantListUiState.Success)?.plants.orEmpty()
     val headerSubtitle = when (val s = state) {
         PlantListUiState.Loading -> "Loading your garden…"
@@ -122,33 +124,43 @@ fun PlantListScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(
-                start = spacing.md, end = spacing.md,
-                top = padding.calculateTopPadding() + spacing.sm,
-                bottom = padding.calculateBottomPadding() + spacing.xxl,
-            ),
-            horizontalArrangement = Arrangement.spacedBy(spacing.md),
-            verticalArrangement = Arrangement.spacedBy(spacing.md),
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = viewModel::onRefresh,
             modifier = Modifier.fillMaxSize(),
         ) {
-            items(plants, key = { it.id }) { plant ->
-                PlantCard(plant = plant, onClick = { onPlantClick(plant.id) })
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(
+                    start = spacing.md, end = spacing.md,
+                    top = padding.calculateTopPadding() + spacing.sm,
+                    bottom = padding.calculateBottomPadding() + spacing.xxl,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(spacing.md),
+                verticalArrangement = Arrangement.spacedBy(spacing.md),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                items(plants, key = { it.id }) { plant ->
+                    PlantCard(
+                        plant = plant,
+                        onClick = { onPlantClick(plant.id) },
+                        modifier = Modifier.animateItem(),
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun PlantCard(plant: PlantCardUi, onClick: () -> Unit) {
+private fun PlantCard(plant: PlantCardUi, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val accents = LocalFloraAccents.current
     Card(
         onClick = onClick,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Box(
             modifier = Modifier
