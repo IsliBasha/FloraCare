@@ -24,7 +24,9 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.junit.After
+import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -135,6 +137,39 @@ class PlantListViewModelTest {
             val success = vm.state.value as PlantListUiState.Success
             assertEquals(1, success.duesToday)
         }
+    }
+
+    // ── C-7: pull-to-refresh ──────────────────────────────────────────────────
+
+    @Test
+    fun `isRefreshing is false initially`() = runTest(dispatcher) {
+        val vm = PlantListViewModel(FakePlantRepository())
+        assertFalse(vm.isRefreshing.value)
+    }
+
+    @Test
+    fun `onRefresh sets isRefreshing to true while refresh is in flight`() = runTest(dispatcher) {
+        val vm = PlantListViewModel(FakePlantRepository())
+        vm.onRefresh()
+        assertTrue(vm.isRefreshing.value)
+    }
+
+    @Test
+    fun `isRefreshing returns to false once refresh completes`() = runTest(dispatcher) {
+        val vm = PlantListViewModel(FakePlantRepository())
+        vm.onRefresh()
+        advanceUntilIdle()
+        assertFalse(vm.isRefreshing.value)
+    }
+
+    @Test
+    fun `concurrent onRefresh while already refreshing is a no-op`() = runTest(dispatcher) {
+        val vm = PlantListViewModel(FakePlantRepository())
+        vm.onRefresh()
+        vm.onRefresh()
+        assertTrue(vm.isRefreshing.value)
+        advanceUntilIdle()
+        assertFalse(vm.isRefreshing.value)
     }
 
     private fun plant(id: String = "pl-1", speciesId: String? = "sp-mon", nick: String = "Mona") =
