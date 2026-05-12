@@ -30,6 +30,9 @@ class FakePlantRepository : PlantRepository {
 
     override fun observePlants(): Flow<List<Plant>> = plants
 
+    override fun observeDeletedPlants(): Flow<List<Plant>> =
+        plants.map { list -> list.filter { it.archived } }
+
     override suspend fun findPlant(id: String): Plant? =
         plants.value.firstOrNull { it.id == id }
 

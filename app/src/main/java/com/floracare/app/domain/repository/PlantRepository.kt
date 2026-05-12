@@ -10,6 +10,7 @@ import kotlinx.datetime.Instant
 
 interface PlantRepository {
     fun observePlants(): Flow<List<Plant>>
+    fun observeDeletedPlants(): Flow<List<Plant>>
     suspend fun findPlant(id: String): Plant?
     suspend fun upsert(plant: Plant)
     suspend fun archivePlant(id: String, archived: Boolean = true)

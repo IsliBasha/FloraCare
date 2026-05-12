@@ -29,6 +29,9 @@ class PlantRepositoryImpl @Inject constructor(
     override fun observePlants(): Flow<List<Plant>> =
         plantDao.observeActive().map { list -> list.map { it.toDomain() } }
 
+    override fun observeDeletedPlants(): Flow<List<Plant>> =
+        plantDao.observeDeleted().map { list -> list.map { it.toDomain() } }
+
     override suspend fun findPlant(id: String): Plant? = plantDao.findById(id)?.toDomain()
 
     override suspend fun upsert(plant: Plant) = plantDao.upsert(plant.toEntity())

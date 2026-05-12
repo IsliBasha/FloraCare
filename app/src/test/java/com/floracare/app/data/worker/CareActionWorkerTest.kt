@@ -79,6 +79,7 @@ class CareActionWorkerTest {
         val snoozes = mutableListOf<Pair<String, Instant>>()
 
         override fun observePlants(): Flow<List<Plant>> = emptyFlow()
+        override fun observeDeletedPlants(): Flow<List<Plant>> = emptyFlow()
         override suspend fun findPlant(id: String): Plant? = null
         override suspend fun upsert(plant: Plant) = Unit
         override suspend fun archivePlant(id: String, archived: Boolean) = Unit

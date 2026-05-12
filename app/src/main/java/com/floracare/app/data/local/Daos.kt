@@ -24,6 +24,9 @@ interface PlantDao {
     @Query("UPDATE plant SET archived = :archived WHERE id = :id")
     suspend fun setArchived(id: String, archived: Boolean)
 
+    @Query("SELECT * FROM plant WHERE archived = 1 ORDER BY nickname ASC")
+    fun observeDeleted(): Flow<List<PlantEntity>>
+
     @Query("SELECT COUNT(*) FROM plant")
     suspend fun count(): Int
 }

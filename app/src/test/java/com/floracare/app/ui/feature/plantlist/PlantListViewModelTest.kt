@@ -176,6 +176,7 @@ class PlantListViewModelTest {
         val openTasks = MutableStateFlow<List<CareTask>>(emptyList())
 
         override fun observePlants(): Flow<List<Plant>> = plants
+        override fun observeDeletedPlants(): Flow<List<Plant>> = MutableStateFlow(emptyList())
         override suspend fun findPlant(id: String): Plant? = plants.value.firstOrNull { it.id == id }
         override suspend fun upsert(plant: Plant) = Unit
         override suspend fun archivePlant(id: String, archived: Boolean) = Unit
