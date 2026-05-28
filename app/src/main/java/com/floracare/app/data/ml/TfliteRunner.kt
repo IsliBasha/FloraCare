@@ -35,6 +35,10 @@ class TfliteRunner private constructor(
     private val outputIsUint8: Boolean,
     private val outputScale: Float,
     private val outputZeroPoint: Int,
+    /** Apply ImageNet mean/std to float32 inputs before inference. */
+    private val useImageNetNorm: Boolean,
+    /** Apply temperature-scaled softmax to float32 outputs after inference. */
+    private val useSoftmax: Boolean,
 ) : Closeable {
 
     fun run(input: FloatArray): FloatArray {
@@ -48,19 +52,24 @@ class TfliteRunner private constructor(
         if (outputIsUint8) {
             val raw = Array(1) { ByteArray(outputSize) }
             interpreter.run(inputBuffer, raw)
+            // Uint8 models already have softmax baked in before quantisation —
+            // dequantise only; do not apply temperature-softmax a second time.
             return dequantise(raw[0], outputScale, outputZeroPoint)
         }
 
         val floatOut = Array(1) { FloatArray(outputSize) }
         interpreter.run(inputBuffer, floatOut)
-        return floatOut[0]
+        // Float32 models output raw logits; convert to calibrated probabilities.
+        return if (useSoftmax) softmax(floatOut[0]) else floatOut[0]
     }
 
     private fun allocFloat32Input(input: FloatArray): ByteBuffer {
+        // Float32 models expect ImageNet-normalised input; apply before packing.
+        val prepared = if (useImageNetNorm) input.applyImageNetNorm() else input
         val buffer = ByteBuffer
-            .allocateDirect(input.size * 4)
+            .allocateDirect(prepared.size * 4)
             .order(ByteOrder.nativeOrder())
-        for (v in input) buffer.putFloat(v)
+        for (v in prepared) buffer.putFloat(v)
         buffer.rewind()
         return buffer
     }
@@ -134,11 +143,21 @@ class TfliteRunner private constructor(
             val inQp = inputTensor.quantizationParams()
             val outQp = outputTensor.quantizationParams()
 
+            // Auto-detect calibration strategy from tensor dtypes:
+            // float32 input → apply ImageNet mean/std (models fine-tuned from
+            // ImageNet-pretrained backbones expect this exact preprocessing).
+            // float32 output → apply temperature-scaled softmax (raw logits
+            // need to become a proper probability distribution for the UI).
+            // uint8 paths skip both — quantisation params handle calibration.
+            val useImageNetNorm = !inputIsUint8
+            val useSoftmax = !outputIsUint8
+
             Log.i(
                 TAG,
                 "TFLite ready: inputSide=$inputSide, outputSize=$outputSize, " +
                     "inputUint8=$inputIsUint8 (inScale=${inQp.scale}, inZero=${inQp.zeroPoint}), " +
-                    "outputUint8=$outputIsUint8 (outScale=${outQp.scale}, outZero=${outQp.zeroPoint})",
+                    "outputUint8=$outputIsUint8 (outScale=${outQp.scale}, outZero=${outQp.zeroPoint}), " +
+                    "imageNetNorm=$useImageNetNorm, softmax=$useSoftmax",
             )
 
             return TfliteRunner(
@@ -150,6 +169,8 @@ class TfliteRunner private constructor(
                 outputIsUint8 = outputIsUint8,
                 outputScale = outQp.scale,
                 outputZeroPoint = outQp.zeroPoint,
+                useImageNetNorm = useImageNetNorm,
+                useSoftmax = useSoftmax,
             )
         }
     }
