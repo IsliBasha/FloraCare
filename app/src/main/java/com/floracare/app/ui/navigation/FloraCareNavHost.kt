@@ -115,7 +115,10 @@ fun FloraCareNavHost(
             )
         }
         composable<FloraRoute.Diagnose> {
-            DiagnoseScreen(onBack = { navController.popBackStack() })
+            DiagnoseScreen(
+                onBack = { navController.popBackStack() },
+                onDone = { navController.popBackStack() },
+            )
         }
         composable<FloraRoute.Journal> { backStackEntry ->
             val route: FloraRoute.Journal = backStackEntry.toRoute()

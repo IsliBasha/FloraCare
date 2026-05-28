@@ -13,6 +13,7 @@ import com.floracare.app.domain.model.WeatherSnapshot
 import com.floracare.app.domain.usecase.ComputeNextCareTaskUseCase
 import com.floracare.app.domain.usecase.ReenrichPlantSpeciesUseCase
 import com.floracare.app.domain.usecase.SpeciesLookupUseCase
+import com.floracare.app.test.FakeDiagnosisRepository
 import com.floracare.app.test.FakePlantRepository
 import com.floracare.app.test.FakeSpeciesRepository
 import com.floracare.app.test.FakeWeatherRepository
@@ -196,6 +197,7 @@ class PlantDetailViewModelTest {
         reenrich = reenrich,
         weather = weather,
         computeNextTask = computeNextTask,
+        diagnosisRepo = FakeDiagnosisRepository(),
     )
 
     private fun seedPlant(

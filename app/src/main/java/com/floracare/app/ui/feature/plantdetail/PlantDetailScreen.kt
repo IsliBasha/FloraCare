@@ -43,13 +43,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.floracare.app.domain.model.CareTaskType
+import com.floracare.app.domain.model.DiagnosisResult
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import com.floracare.app.ui.theme.LocalFloraAccents
 import com.floracare.app.ui.theme.LocalFloraSpacing
 
@@ -218,6 +224,11 @@ private fun ReadyContent(
                 }
             }
         }
+        if (state.recentDiagnoses.isNotEmpty()) {
+            item {
+                DiagnosisHistorySection(diagnoses = state.recentDiagnoses)
+            }
+        }
         item {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(spacing.sm),
@@ -345,6 +356,61 @@ private fun OverflowMenu(onEdit: () -> Unit) {
             )
         }
     }
+}
+
+@Composable
+private fun DiagnosisHistorySection(diagnoses: List<DiagnosisResult>) {
+    val spacing = LocalFloraSpacing.current
+    Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.sm)) {
+        Text(
+            "Recent diagnoses",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(Modifier.height(spacing.xs))
+        diagnoses.forEach { result ->
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            result.diagnosisLabel,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            formatDiagnosisDate(result.createdAt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        result.treatmentSuggestion,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun formatDiagnosisDate(instant: Instant): String {
+    val date = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+    val month = date.month.name.take(3).let { it[0] + it.drop(1).lowercase() }
+    return "${date.dayOfMonth} $month"
 }
 
 @Composable

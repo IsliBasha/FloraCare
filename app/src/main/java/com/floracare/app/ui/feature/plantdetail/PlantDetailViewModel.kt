@@ -12,6 +12,8 @@ import com.floracare.app.domain.model.LightNeed
 import com.floracare.app.domain.model.LocationTag
 import com.floracare.app.domain.model.Plant
 import com.floracare.app.domain.model.Species
+import com.floracare.app.domain.model.DiagnosisResult
+import com.floracare.app.domain.repository.DiagnosisRepository
 import com.floracare.app.domain.repository.PlantRepository
 import com.floracare.app.domain.repository.WeatherRepository
 import com.floracare.app.domain.usecase.ComputeNextCareTaskUseCase
@@ -40,6 +42,7 @@ sealed interface PlantDetailUiState {
         val plant: Plant,
         val species: Species?,
         val upcoming: List<UpcomingTask>,
+        val recentDiagnoses: List<DiagnosisResult> = emptyList(),
     ) : PlantDetailUiState
 }
 
@@ -68,6 +71,7 @@ class PlantDetailViewModel(
     private val reenrich: ReenrichPlantSpeciesUseCase,
     private val weather: WeatherRepository,
     private val computeNextTask: ComputeNextCareTaskUseCase,
+    private val diagnosisRepo: DiagnosisRepository,
 ) : ViewModel() {
 
     @Inject constructor(
@@ -76,12 +80,14 @@ class PlantDetailViewModel(
         reenrich: ReenrichPlantSpeciesUseCase,
         weather: WeatherRepository,
         computeNextTask: ComputeNextCareTaskUseCase,
+        diagnosisRepo: DiagnosisRepository,
     ) : this(
         plantId = savedStateHandle.toRoute<FloraRoute.PlantDetail>().plantId,
         repo = repo,
         reenrich = reenrich,
         weather = weather,
         computeNextTask = computeNextTask,
+        diagnosisRepo = diagnosisRepo,
     )
 
     init {
@@ -100,7 +106,8 @@ class PlantDetailViewModel(
             repo.observeAllSpecies(),
             repo.observeOpenTasks(plantId),
             weather.observeRecent(Clock.System.now() - WEATHER_OBSERVATION_DAYS.days),
-        ) { plants, species, openTasks, recentWeather ->
+            diagnosisRepo.observeForPlant(plantId),
+        ) { plants, species, openTasks, recentWeather, diagnoses ->
             val plant = plants.firstOrNull { it.id == plantId }
                 ?: return@combine PlantDetailUiState.NotFound
             val speciesFor = plant.speciesId?.let { id -> species.firstOrNull { it.id == id } }
@@ -116,6 +123,7 @@ class PlantDetailViewModel(
                 plant = plant,
                 species = speciesFor,
                 upcoming = upcoming,
+                recentDiagnoses = diagnoses.take(MAX_DIAGNOSES_SHOWN),
             ) as PlantDetailUiState
         }
             .onStart<PlantDetailUiState> { emit(PlantDetailUiState.Loading) }
@@ -147,6 +155,7 @@ class PlantDetailViewModel(
     companion object {
         private const val WEATHER_OBSERVATION_DAYS = 7
         private const val LOGS_LOOKBACK_DAYS = 14
+        private const val MAX_DIAGNOSES_SHOWN = 3
     }
 }
 
