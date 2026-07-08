@@ -13,3 +13,7 @@ local.properties
 *.jks
 .kotlin/
 .claude
+tools/ml-conversion/.venv/
+tools/ml-conversion/*.onnx
+tools/ml-conversion/saved_model/
+tools/ml-conversion/__pycache__/

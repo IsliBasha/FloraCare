@@ -12,6 +12,26 @@ object ConfidenceThresholds {
      * user; the resolver fetches real taxonomy from Perenual.
      */
     const val LOW_CONFIDENCE: Float = 0.25f
+
+    /**
+     * Below this top-1 AIY score, the houseplant-specialist ViT classifier
+     * (47 classes) is allowed to override AIY's guess — see
+     * `mergeHouseplant()` in `HouseplantMerge.kt`.
+     *
+     * Placeholder pending real on-device calibration (tracked separately in
+     * `HouseplantVitCalibrationTest`, an androidTest). It is deliberately set
+     * higher than [LOW_CONFIDENCE] rather than reused: a 47-class softmax has
+     * a much easier discrimination problem than AIY's 2,102-class one, so a
+     * well-calibrated ViT model's "correct" top-1 confidence baseline is
+     * expected to sit meaningfully higher than AIY's. Reusing 0.25f here
+     * would let ViT override AIY on results that are barely more than a
+     * random-ish guess out of 47 classes. 0.5f is a conservative middle
+     * ground: high enough that we only trust ViT when it looks genuinely
+     * confident, low enough to still kick in on the AIY-is-clearly-guessing
+     * cases (AIY is weak on houseplants — the entire reason this classifier
+     * exists) rather than defaulting to AIY on every borderline case.
+     */
+    const val HOUSEPLANT_LOW_CONFIDENCE: Float = 0.5f
 }
 
 /**

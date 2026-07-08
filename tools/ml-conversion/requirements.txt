@@ -1,0 +1,11 @@
+torch>=2.2
+torchvision>=0.17
+transformers>=4.40
+onnx>=1.16
+onnx2tf>=1.22
+tensorflow>=2.16
+tf_keras>=2.16
+onnxruntime>=1.18
+sng4onnx>=1.0.1
+onnx_graphsurgeon>=0.3.26
+pillow>=10.0

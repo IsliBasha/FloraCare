@@ -35,11 +35,22 @@ class TfliteRunner private constructor(
     private val outputIsUint8: Boolean,
     private val outputScale: Float,
     private val outputZeroPoint: Int,
-    /** Apply ImageNet mean/std to float32 inputs before inference. */
-    private val useImageNetNorm: Boolean,
+    /** How to prepare a float32 model's input; irrelevant for uint8 models. */
+    private val float32InputMode: Float32InputMode,
     /** Apply temperature-scaled softmax to float32 outputs after inference. */
     private val useSoftmax: Boolean,
 ) : Closeable {
+
+    /** Preprocessing strategy for a float32 model's input tensor. */
+    enum class Float32InputMode {
+        /** Apply ImageNet mean/std to [0,1]-range input — models fine-tuned
+         * from ImageNet-pretrained backbones expect this exact preprocessing. */
+        IMAGENET_NORMALIZED,
+
+        /** Feed raw [0,255]-range values with no extra normalisation — models
+         * that bake their own preprocessing into the exported graph. */
+        RAW_0_255,
+    }
 
     fun run(input: FloatArray): FloatArray {
         val expected = inputSide * inputSide * 3
@@ -64,8 +75,13 @@ class TfliteRunner private constructor(
     }
 
     private fun allocFloat32Input(input: FloatArray): ByteBuffer {
-        // Float32 models expect ImageNet-normalised input; apply before packing.
-        val prepared = if (useImageNetNorm) input.applyImageNetNorm() else input
+        val prepared = when (float32InputMode) {
+            Float32InputMode.IMAGENET_NORMALIZED -> input.applyImageNetNorm()
+            // Caller supplies [0,1]-range values; rescale to [0,255] like the
+            // uint8 path does, but keep float32 dtype for the model's own
+            // baked-in preprocessing to consume.
+            Float32InputMode.RAW_0_255 -> FloatArray(input.size) { input[it] * 255f }
+        }
         val buffer = ByteBuffer
             .allocateDirect(prepared.size * 4)
             .order(ByteOrder.nativeOrder())
@@ -111,7 +127,11 @@ class TfliteRunner private constructor(
          * the device reports support; on any failure, falls back to a plain CPU
          * interpreter so inference never hard-fails because of vendor GPU quirks.
          */
-        fun create(modelBuffer: MappedByteBuffer, numCpuThreads: Int = 2): TfliteRunner {
+        fun create(
+            modelBuffer: MappedByteBuffer,
+            numCpuThreads: Int = 2,
+            float32InputMode: Float32InputMode = Float32InputMode.IMAGENET_NORMALIZED,
+        ): TfliteRunner {
             val gpuAttempt = runCatching {
                 val compat = CompatibilityList()
                 if (!compat.isDelegateSupportedOnThisDevice) {
@@ -143,13 +163,14 @@ class TfliteRunner private constructor(
             val inQp = inputTensor.quantizationParams()
             val outQp = outputTensor.quantizationParams()
 
-            // Auto-detect calibration strategy from tensor dtypes:
-            // float32 input → apply ImageNet mean/std (models fine-tuned from
-            // ImageNet-pretrained backbones expect this exact preprocessing).
-            // float32 output → apply temperature-scaled softmax (raw logits
-            // need to become a proper probability distribution for the UI).
-            // uint8 paths skip both — quantisation params handle calibration.
-            val useImageNetNorm = !inputIsUint8
+            // Auto-detect softmax calibration from output dtype: float32
+            // output → apply temperature-scaled softmax (raw logits need to
+            // become a proper probability distribution for the UI); uint8
+            // output already has softmax baked in before quantisation.
+            // Float32 input preprocessing is NOT dtype-inferred -- callers
+            // pass float32InputMode explicitly, since dtype alone can't tell
+            // "ImageNet-pretrained backbone" apart from "bakes its own
+            // preprocessing into the graph".
             val useSoftmax = !outputIsUint8
 
             Log.i(
@@ -157,7 +178,7 @@ class TfliteRunner private constructor(
                 "TFLite ready: inputSide=$inputSide, outputSize=$outputSize, " +
                     "inputUint8=$inputIsUint8 (inScale=${inQp.scale}, inZero=${inQp.zeroPoint}), " +
                     "outputUint8=$outputIsUint8 (outScale=${outQp.scale}, outZero=${outQp.zeroPoint}), " +
-                    "imageNetNorm=$useImageNetNorm, softmax=$useSoftmax",
+                    "float32InputMode=$float32InputMode, softmax=$useSoftmax",
             )
 
             return TfliteRunner(
@@ -169,7 +190,7 @@ class TfliteRunner private constructor(
                 outputIsUint8 = outputIsUint8,
                 outputScale = outQp.scale,
                 outputZeroPoint = outQp.zeroPoint,
-                useImageNetNorm = useImageNetNorm,
+                float32InputMode = float32InputMode,
                 useSoftmax = useSoftmax,
             )
         }
