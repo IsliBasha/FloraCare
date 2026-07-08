@@ -77,6 +77,10 @@ in that file for the exact code and full comment.
 Searched onnx2tf's GitHub issues (web search, 2026-07-08) for `"negative count"` and
 `"tensor_buffer_builder"` -- no existing issue found matching this.
 
+### Filed
+
+https://github.com/PINTO0309/onnx2tf/issues/941 (2026-07-09)
+
 ---
 
 ## 2. CONFIRMED: `flatbuffer_direct` INT8 pipeline miscalibrates input/output tensors (and barely compresses weights at all)
@@ -122,8 +126,20 @@ output_integer_quantized_tflite=False`), then do all INT8 quantization ourselves
 
 ### Checked for existing reports
 
-Not searched as thoroughly as bug #1 -- worth checking onnx2tf's issues for
-`custom_input_op_name_np_data_path` + `flatbuffer_direct` calibration complaints before filing.
+Found https://github.com/PINTO0309/onnx2tf/issues/724 ("Bloated Full Integer Quant TFLite
+file") -- describes the same bloat symptom, traced by the maintainer to too few calibration
+images (4 caused bloat, 128 fixed it in that report). Possibly the same root cause. Tried to
+confirm by reproducing with 64 and 128 calibration images here, but both attempts got
+OOM-killed in this environment (7.2GB RAM, `anon-rss` hit ~5.8GB partway through onnx2tf's own
+pipeline) before completing -- inconclusive either way. Also checked
+https://github.com/PINTO0309/onnx2tf/issues/610 (different root cause: a user double-applying
+normalization on top of a self-normalizing graph -- not what happened here, our calibration
+formula was confirmed correct in isolation).
+
+### Filed
+
+https://github.com/PINTO0309/onnx2tf/issues/942 (2026-07-09) -- filed with the #724 overlap and
+the inconclusive OOM retries disclosed upfront.
 
 ---
 
